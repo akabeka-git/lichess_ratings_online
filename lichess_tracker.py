@@ -204,6 +204,17 @@ def generate_html(players_data):
     font-size: 11px;
     color: #dddddd;
   }}
+  @media (max-width: 600px) {{
+    body {{
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+    }}
+    .wrapper {{
+      transform: scale(0.8);
+      transform-origin: top center;
+    }}
+  }}
 </style>
 </head>
 <body>
