@@ -1,0 +1,8 @@
+[build]
+  publish = "public"
+  command = ""          # kein Build-Befehl — HTML kommt fertig per GitHub Actions
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

@@ -1,0 +1,4 @@
+# Lichess-Spielernamen (einer pro Zeile, # = Kommentar)
+tric-k_17
+pion-panique
+panic-pawn
