@@ -102,7 +102,8 @@ def fetch_player_data(username):
 
 def generate_html(players_data):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
-    now = datetime.now()
+    import zoneinfo
+    now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
     now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
 
     rows = ""
@@ -202,17 +203,6 @@ def generate_html(players_data):
     margin-top: 1rem;
     font-size: 11px;
     color: #dddddd;
-  }}
-  @media (max-width: 600px) {{
-    body {{
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 0;
-    }}
-    .wrapper {{
-      transform: scale(0.8);
-      transform-origin: top center;
-    }}
   }}
 </style>
 </head>
