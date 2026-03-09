@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create public directory if missing
-        run: mkdir -p public
+      - name: Create docs directory if missing
+        run: mkdir -p docs
 
       - name: Run Lichess tracker
         run: python lichess_tracker.py
@@ -28,7 +28,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/index.html werte.json
+          git add docs/index.html werte.json
           git diff --staged --quiet \
             && echo "Keine Änderungen." \
             || (git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git push)

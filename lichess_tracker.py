@@ -13,7 +13,7 @@ import time
 
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PLAYERS_FILE = os.path.join(SCRIPT_DIR, "spieler.txt")
-PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "public")
+PUBLIC_DIR = os.path.join(SCRIPT_DIR, "docs")
 OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
