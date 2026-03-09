@@ -1,12 +1,10 @@
 # Lichess-Spielernamen (einer pro Zeile, # = Kommentar)
-# Lichess Spielerliste — einen Namen pro Zeile
-# Zeilen mit # werden ignoriert
-cwr4356
 tric-k_17
 pion-panique
+panic-pawn
+cwr4356
 schachpinguin3000
 schnullepipulle
-panic-pawn
 Saeed_Sharifi
 Grihitha_varma
 markauts
