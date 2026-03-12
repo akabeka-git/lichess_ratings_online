@@ -13,7 +13,7 @@ import time
 
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PLAYERS_FILE = os.path.join(SCRIPT_DIR, "spieler.txt")
-PUBLIC_DIR = os.path.join(SCRIPT_DIR, "docs")
+PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "docs")
 OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
@@ -93,12 +93,16 @@ def fetch_player_data(username):
         classical = user_info.get("perfs", {}).get("classical", {})
         rating = classical.get("rating", 0)
         provisional = classical.get("prov", False)
-        games_today = fetch_todays_classic_games(username)
-        diff = calculate_daily_diff(games_today, username)
-        return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "error": False}
     except Exception as e:
         print(f"  Fehler bei {username}: {e}", file=sys.stderr)
         return {"name": username, "rating": 0, "diff": 0, "error": True}
+    try:
+        games_today = fetch_todays_classic_games(username)
+        diff = calculate_daily_diff(games_today, username)
+    except Exception as e:
+        print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
+        diff = 0
+    return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "error": False}
 
 def generate_html(players_data):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
