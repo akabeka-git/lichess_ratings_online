@@ -147,9 +147,9 @@ def generate_html(players_data):
         text_color   = dim65(base_color) if p.get("provisional") else base_color
         rating_color = text_color
 
-        # Highlight-Spieler: Name, Diff, Wertung kursiv
-        name_style   = "font-style:italic;" if is_highlight else ""
-        rating_style = "font-style:italic;" if is_highlight else ""
+        # Highlight-Spieler: Name, Diff, Wertung kursiv+fett
+        name_style   = "font-style:italic;font-weight:bold;" if is_highlight else ""
+        rating_style = "font-style:italic;font-weight:bold;" if is_highlight else ""
 
         # Differenz: grün / rot / neutral — auch gedimmt wenn provisorisch
         if diff > 0:
