@@ -171,7 +171,7 @@ def generate_html(players_data):
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a></td>\n"
-            f"        <td style=\"color:{diff_color};text-align:right\">{diff_str}</td>\n"
+            f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
             f"      </tr>\n"
         )
