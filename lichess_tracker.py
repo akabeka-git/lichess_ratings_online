@@ -132,13 +132,13 @@ def generate_html(players_data):
                 days_ago = (date.today() - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
-        # Basis-Textfarbe (ohne provisional-Dimming)
+        # Basis-Textfarbe
         if played_recently:
-            base_color = "#a68900" if is_highlight else "#ffd700"
+            base_color = "#a68900" if (is_highlight or p.get("provisional")) else "#ffd700"
         else:
-            base_color = "#a6a6a6" if is_highlight else "#ffffff"
+            base_color = "#a6a6a6" if (is_highlight or p.get("provisional")) else "#ffffff"
 
-        # Provisorische Wertung: 65% Helligkeit der Basisfarbe — gilt für ganze Zeile
+        # Provisorische Wertung: 65% Helligkeit — gilt für ganze Zeile
         def dim65(hex_color):
             h = hex_color.lstrip("#")
             r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
