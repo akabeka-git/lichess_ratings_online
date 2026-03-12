@@ -135,9 +135,9 @@ def generate_html(players_data):
         if played_recently:
             text_color = "#a68900" if is_highlight else "#ffd700" if not p.get("provisional") else "#a68900"
         else:
-            text_color = "#a6a6a6" if is_highlight else "#ffffff" if not p.get("provisional") else "#a6a6a6"
+            text_color = "#a6a6a6" if is_highlight else "#ffffff" if not p.get("provisional") else "#858585"
 
-        name_weight = "bold" if is_highlight else "normal"
+        name_style = "font-style:italic;" if is_highlight else ""
 
         # Differenz: grün / rot / neutral
         if diff > 0:
@@ -158,7 +158,7 @@ def generate_html(players_data):
         rows += (
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
-            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;font-weight:{name_weight};'>{p['name']}</a></td>\n"
+            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a></td>\n"
             f"        <td style=\"color:{diff_color};text-align:right\">{diff_str}</td>\n"
             f"        <td style=\"color:{'#a68900' if p.get('provisional') and played_recently else '#a6a6a6' if p.get('provisional') else text_color};text-align:right\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
             f"      </tr>\n"
