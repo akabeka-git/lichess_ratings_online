@@ -132,12 +132,24 @@ def generate_html(players_data):
                 days_ago = (date.today() - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
+        # Basis-Textfarbe (ohne provisional-Dimming)
         if played_recently:
-            text_color = "#a68900" if is_highlight else "#ffd700" if not p.get("provisional") else "#a68900"
+            base_color = "#a68900" if is_highlight else "#ffd700"
         else:
-            text_color = "#a6a6a6" if is_highlight else "#ffffff" if not p.get("provisional") else "#858585"
+            base_color = "#a6a6a6" if is_highlight else "#ffffff"
 
-        name_style = "font-style:italic;" if is_highlight else ""
+        # Provisorische Wertung: 65% Helligkeit der Basisfarbe
+        def dim65(hex_color):
+            h = hex_color.lstrip("#")
+            r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+            return "#{:02x}{:02x}{:02x}".format(int(r*0.65), int(g*0.65), int(b*0.65))
+
+        text_color  = base_color
+        rating_color = dim65(base_color) if p.get("provisional") else base_color
+
+        # Highlight-Spieler: Name kursiv, Wertung kursiv
+        name_style   = "font-style:italic;" if is_highlight else ""
+        rating_style = "font-style:italic;" if is_highlight else ""
 
         # Differenz: grün / rot / neutral
         if diff > 0:
@@ -160,7 +172,7 @@ def generate_html(players_data):
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a></td>\n"
             f"        <td style=\"color:{diff_color};text-align:right\">{diff_str}</td>\n"
-            f"        <td style=\"color:{'#a68900' if p.get('provisional') and played_recently else '#a6a6a6' if p.get('provisional') else text_color};text-align:right\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
+            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
             f"      </tr>\n"
         )
 
