@@ -138,26 +138,27 @@ def generate_html(players_data):
         else:
             base_color = "#a6a6a6" if is_highlight else "#ffffff"
 
-        # Provisorische Wertung: 65% Helligkeit der Basisfarbe
+        # Provisorische Wertung: 65% Helligkeit der Basisfarbe — gilt für ganze Zeile
         def dim65(hex_color):
             h = hex_color.lstrip("#")
             r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
             return "#{:02x}{:02x}{:02x}".format(int(r*0.65), int(g*0.65), int(b*0.65))
 
-        text_color  = base_color
-        rating_color = dim65(base_color) if p.get("provisional") else base_color
+        text_color   = dim65(base_color) if p.get("provisional") else base_color
+        rating_color = text_color
 
-        # Highlight-Spieler: Name kursiv, Wertung kursiv
+        # Highlight-Spieler: Name, Diff, Wertung kursiv
         name_style   = "font-style:italic;" if is_highlight else ""
         rating_style = "font-style:italic;" if is_highlight else ""
 
-        # Differenz: grün / rot / neutral
+        # Differenz: grün / rot / neutral — auch gedimmt wenn provisorisch
         if diff > 0:
-            diff_color = "#5fdd8a" if is_highlight else "#3dbd6a"
+            raw_diff_color = "#5fdd8a" if is_highlight else "#3dbd6a"
         elif diff < 0:
-            diff_color = "#ff6b6b" if is_highlight else "#cc4444"
+            raw_diff_color = "#ff6b6b" if is_highlight else "#cc4444"
         else:
-            diff_color = text_color
+            raw_diff_color = base_color
+        diff_color = dim65(raw_diff_color) if p.get("provisional") else raw_diff_color
 
         diff_str = f"{diff_sign}{diff}" if diff != 0 else ""
 
