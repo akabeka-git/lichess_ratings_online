@@ -52,16 +52,20 @@ def is_online():
     except:
         return False
 
+def fetch_user_info(username):
+    url = f"https://lichess.org/api/user/{username}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode())
+
 def fetch_blog_stats():
     import re
     try:
         req = urllib.request.Request(BLOG_URL, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
-        # Views: z.B. "5,147 views" oder "5147 views"
         views_match = re.search(r'([\d,]+)\s*views', html)
         views = views_match.group(1) if views_match else "?"
-        # Likes: z.B. class="ublog-post__likes__count">95<
         likes_match = re.search(r'likes[^>]*>\s*(\d+)', html)
         if not likes_match:
             likes_match = re.search(r'"count"[^>]*>\s*(\d+)', html)
@@ -70,10 +74,6 @@ def fetch_blog_stats():
     except Exception as e:
         print(f"  Blog-Abruf fehlgeschlagen: {e}", file=sys.stderr)
         return {"views": "?", "likes": "?"}
-    url = f"https://lichess.org/api/user/{username}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        return json.loads(resp.read().decode())
 
 def fetch_todays_classic_games(username):
     url = (
