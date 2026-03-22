@@ -6,6 +6,7 @@ Lichess Classic Ratings Tracker — Multi-Spieler
 import json
 import urllib.request
 import urllib.error
+import re
 from datetime import datetime, timezone, date
 import os
 import sys
@@ -19,6 +20,8 @@ CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
 HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn"}
+
+BLOG_URL = "https://lichess.org/@/panic-pawn/blog/siegbert-tarrasch-das-schachspiel/AKMD2L66"
 
 def load_players():
     if not os.path.exists(PLAYERS_FILE):
@@ -49,7 +52,24 @@ def is_online():
     except:
         return False
 
-def fetch_user_info(username):
+def fetch_blog_stats():
+    import re
+    try:
+        req = urllib.request.Request(BLOG_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+        # Views: z.B. "5,147 views" oder "5147 views"
+        views_match = re.search(r'([\d,]+)\s*views', html)
+        views = views_match.group(1) if views_match else "?"
+        # Likes: z.B. class="ublog-post__likes__count">95<
+        likes_match = re.search(r'likes[^>]*>\s*(\d+)', html)
+        if not likes_match:
+            likes_match = re.search(r'"count"[^>]*>\s*(\d+)', html)
+        likes = likes_match.group(1) if likes_match else "?"
+        return {"views": views, "likes": likes}
+    except Exception as e:
+        print(f"  Blog-Abruf fehlgeschlagen: {e}", file=sys.stderr)
+        return {"views": "?", "likes": "?"}
     url = f"https://lichess.org/api/user/{username}"
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=10) as resp:
@@ -104,7 +124,7 @@ def fetch_player_data(username):
         diff = 0
     return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "error": False}
 
-def generate_html(players_data):
+def generate_html(players_data, blog_views=None, blog_likes=None, diff_views=0, diff_likes=0):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -177,6 +197,9 @@ def generate_html(players_data):
             f"      </tr>\n"
         )
 
+    dv = f" <span style='color:#5fdd8a'>+{diff_views}</span>" if diff_views > 0 else f" <span style='color:#ff6b6b'>{diff_views}</span>" if diff_views < 0 else ""
+    dl = f" <span style='color:#5fdd8a'>+{diff_likes}</span>" if diff_likes > 0 else f" <span style='color:#ff6b6b'>{diff_likes}</span>" if diff_likes < 0 else ""
+
     html = f"""<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -244,7 +267,14 @@ def generate_html(players_data):
 {rows}    </tbody>
   </table>
   <br>
-  <div class="updated">{now_str}</div>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+    <div class="updated">{now_str}</div>
+    <div class="updated" style="text-align:right;">
+      <a href="{BLOG_URL}" target="_blank" style="color:#dddddd;text-decoration:none;">
+        &#128065;&nbsp;{blog_views if blog_views else "?"}{dv}&nbsp;&nbsp;&#9829;&nbsp;{blog_likes if blog_likes else "?"}{dl}
+      </a>
+    </div>
+  </div>
 </div>
 </body>
 </html>"""
@@ -279,8 +309,22 @@ def main():
 
     players_data.sort(key=lambda p: p["rating"], reverse=True)
 
+    print("  Rufe Blog-Stats ab ...")
+    blog = fetch_blog_stats()
+
+    # Blog-Differenzen berechnen
+    prev_views = int(cache.get("_blog_views", 0) or 0)
+    prev_likes = int(cache.get("_blog_likes", 0) or 0)
+    curr_views = int(blog["views"].replace(",", "").replace(".", "")) if blog["views"] and blog["views"] != "?" else 0
+    curr_likes = int(blog["likes"]) if blog["likes"] and blog["likes"] != "?" else 0
+    diff_views = curr_views - prev_views if prev_views else 0
+    diff_likes = curr_likes - prev_likes if prev_likes else 0
+    if curr_views: cache["_blog_views"] = curr_views
+    if curr_likes: cache["_blog_likes"] = curr_likes
+    save_cache(cache)
+
     os.makedirs(PUBLIC_DIR, exist_ok=True)
-    html = generate_html(players_data)
+    html = generate_html(players_data, blog["views"], blog["likes"], diff_views, diff_likes)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)
 
