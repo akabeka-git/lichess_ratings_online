@@ -64,12 +64,15 @@ def fetch_blog_stats():
         req = urllib.request.Request(BLOG_URL, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
-        views_match = re.search(r'([\d,]+)\s*views', html)
-        views = views_match.group(1) if views_match else "?"
-        likes_match = re.search(r'likes[^>]*>\s*(\d+)', html)
+        # Views: "5,147 views" oder "5147 views" oder "5 147 views"
+        views_match = re.search(r'([\d][,.\s\d]*\d|\d)\s*views', html)
+        views = views_match.group(1).strip().replace(",", "").replace(".", "").replace(" ", "") if views_match else "?"
+        # Likes: Zahl direkt vor "views" (Lichess-Layout: "95  5,147 views")
+        likes_match = re.search(r'(\d+)\s*(?:&#[^;]+;)?\s*[\d,]+\s*views', html)
         if not likes_match:
-            likes_match = re.search(r'"count"[^>]*>\s*(\d+)', html)
+            likes_match = re.search(r'class="[^"]*like[^"]*"[^>]*>\D*(\d+)', html)
         likes = likes_match.group(1) if likes_match else "?"
+        print(f"  Blog: views={views}, likes={likes}")
         return {"views": views, "likes": likes}
     except Exception as e:
         print(f"  Blog-Abruf fehlgeschlagen: {e}", file=sys.stderr)
