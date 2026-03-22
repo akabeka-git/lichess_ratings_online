@@ -268,8 +268,8 @@ def generate_html(players_data, blog_views=None, blog_likes=None, diff_views=0, 
   </table>
   <br>
   <div style="display:flex;justify-content:space-between;align-items:baseline;">
-    <div class="updated">{now_str}</div>
-    <div class="updated" style="text-align:right;">
+    <div class="updated" style="font-size:16px;">{now_str}</div>
+    <div class="updated" style="text-align:right;font-size:16px;">
       <a href="{BLOG_URL}" target="_blank" style="color:#dddddd;text-decoration:none;">
         &#128065;&nbsp;{blog_views if blog_views else "?"}{dv}&nbsp;&nbsp;&#9829;&nbsp;{blog_likes if blog_likes else "?"}{dl}
       </a>
