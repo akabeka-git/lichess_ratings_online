@@ -201,7 +201,7 @@ def generate_html(players_data):
     text-align: left;
   }}
   h1 {{
-    font-size: 16px;
+    font-size: 19px;
     font-weight: normal;
     color: #dddddd;
     margin-bottom: 2rem;
