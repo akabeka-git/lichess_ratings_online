@@ -18,7 +18,7 @@ OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
-HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn"}
+HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn", "botfather-slay"}
 
 def load_players():
     if not os.path.exists(PLAYERS_FILE):
