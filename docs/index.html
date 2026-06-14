@@ -25,11 +25,7 @@
     font-size: 19px;
     font-weight: normal;
     color: #dddddd;
-    margin-bottom: 2rem;
-  }
-  .pawn {
-    color: #ffffff;
-    margin-right: 0.4em;
+    margin-bottom: 0;
   }
   table {
     border-collapse: collapse;
@@ -40,8 +36,7 @@
     font-weight: normal;
   }
   .updated {
-    margin-top: 1rem;
-    font-size: 11px;
+    font-size: 16px;
     color: #dddddd;
   }
   @media (max-width: 600px) {
@@ -59,7 +54,10 @@
 </head>
 <body>
 <div class="wrapper">
-  <h1><span class="pawn">&#9823;</span>lichess classic ratings</h1>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;">
+    <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
+    <div class="updated">14. Juni 13:22 Uhr</div>
+  </div>
   <table>
     <tbody>
       <tr>
@@ -222,8 +220,6 @@
       </tr>
     </tbody>
   </table>
-  <br>
-  <div class="updated" style="font-size:16px;">14. Juni 13:06 Uhr</div>
 </div>
 </body>
 </html>
