@@ -217,6 +217,8 @@ def generate_html(players_data):
             h2h_str = ""
 
         display_name = "schachpinguin" if p['name'].lower() == "schachpinguin3000" else p['name']
+        if is_highlight:
+            display_name = f"&gt;&gt; {display_name} &lt;&lt;"
 
         rows += (
             f"      <tr>\n"
