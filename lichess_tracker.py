@@ -132,13 +132,11 @@ def generate_html(players_data):
                 days_ago = (date.today() - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
-        # Basis-Textfarbe
         if played_recently:
             base_color = "#a68900" if (is_highlight or p.get("provisional")) else "#ffd700"
         else:
             base_color = "#a6a6a6" if (is_highlight or p.get("provisional")) else "#ffffff"
 
-        # Provisorische Wertung: 65% Helligkeit — gilt für ganze Zeile
         def dim65(hex_color):
             h = hex_color.lstrip("#")
             r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
@@ -147,11 +145,10 @@ def generate_html(players_data):
         text_color   = dim65(base_color) if p.get("provisional") else base_color
         rating_color = text_color
 
-        # Highlight-Spieler: Name, Diff, Wertung kursiv+fett
         name_style   = "font-style:italic;font-weight:bold;" if is_highlight else ""
         rating_style = "font-style:italic;font-weight:bold;" if is_highlight else ""
 
-        # Differenz: grün / rot / neutral — auch gedimmt wenn provisorisch
+        # Differenz: grün / rot / neutral
         if diff > 0:
             raw_diff_color = "#5fdd8a" if is_highlight else "#3dbd6a"
         elif diff < 0:
@@ -204,11 +201,7 @@ def generate_html(players_data):
     font-size: 19px;
     font-weight: normal;
     color: #dddddd;
-    margin-bottom: 2rem;
-  }}
-  .pawn {{
-    color: #ffffff;
-    margin-right: 0.4em;
+    margin-bottom: 0;
   }}
   table {{
     border-collapse: collapse;
@@ -219,8 +212,7 @@ def generate_html(players_data):
     font-weight: normal;
   }}
   .updated {{
-    margin-top: 1rem;
-    font-size: 11px;
+    font-size: 16px;
     color: #dddddd;
   }}
   @media (max-width: 600px) {{
@@ -238,13 +230,14 @@ def generate_html(players_data):
 </head>
 <body>
 <div class="wrapper">
-  <h1><span class="pawn">&#9823;</span>lichess classic ratings</h1>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;">
+    <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
+    <div class="updated">{now_str}</div>
+  </div>
   <table>
     <tbody>
 {rows}    </tbody>
   </table>
-  <br>
-  <div class="updated" style="font-size:16px;">{now_str}</div>
 </div>
 </body>
 </html>"""
