@@ -54,7 +54,7 @@ H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
         return None
-    total_wins, total_losses = 0, 0
+    total_wins, total_losses, total_draws = 0, 0, 0
     for h2h_player in H2H_PLAYERS:
         url = (
             f"https://lichess.org/api/games/user/{h2h_player}"
@@ -72,7 +72,9 @@ def fetch_h2h_score(username):
                     players = game.get("players", {})
                     white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
                     h2h_is_white = white_id == h2h_player.lower()
-                    if winner == "white":
+                    if winner is None:
+                        total_draws += 1
+                    elif winner == "white":
                         if h2h_is_white: total_wins += 1
                         else: total_losses += 1
                     elif winner == "black":
@@ -80,9 +82,14 @@ def fetch_h2h_score(username):
                         else: total_losses += 1
         except Exception as e:
             print(f"  H2H-Fehler bei {username} vs {h2h_player}: {e}", file=sys.stderr)
-    if total_wins == 0 and total_losses == 0:
+    if total_wins == 0 and total_losses == 0 and total_draws == 0:
         return None
-    return (total_wins, total_losses)
+    my_score = total_wins + total_draws * 0.5
+    opp_score = total_losses + total_draws * 0.5
+    # Format: ganzzahlig wenn .0, sonst mit .5
+    def fmt(n):
+        return str(int(n)) if n == int(n) else str(n)
+    return (fmt(my_score), fmt(opp_score))
 
 def fetch_user_info(username):
     url = f"https://lichess.org/api/user/{username}"
@@ -206,9 +213,10 @@ def generate_html(players_data):
 
         h2h = p.get("h2h")
         if h2h:
-            if h2h[0] > h2h[1]:
+            my_s, opp_s = float(h2h[0]), float(h2h[1])
+            if my_s > opp_s:
                 h2h_color = "#3d7a52"
-            elif h2h[0] < h2h[1]:
+            elif my_s < opp_s:
                 h2h_color = "#7a3d3d"
             else:
                 h2h_color = "#555555"
@@ -218,7 +226,7 @@ def generate_html(players_data):
 
         display_name = "schachpinguin" if p['name'].lower() == "schachpinguin3000" else p['name']
         if is_highlight:
-            display_name = f"&gt;&gt; {display_name} &lt;&lt;"
+            display_name = f"&gt;&gt; {display_name}"
 
         rows += (
             f"      <tr>\n"
