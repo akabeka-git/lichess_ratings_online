@@ -49,7 +49,7 @@ def is_online():
     except:
         return False
 
-H2H_PLAYERS = ["pion-panique", "botfather-slay"]
+H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17"]
 
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
@@ -202,12 +202,23 @@ def generate_html(players_data):
         row_num += 1
 
         h2h = p.get("h2h")
-        h2h_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;'>{h2h[0]}-{h2h[1]}</span>" if h2h else ""
+        if h2h:
+            if h2h[0] > h2h[1]:
+                h2h_color = "#3d7a52"
+            elif h2h[0] < h2h[1]:
+                h2h_color = "#7a3d3d"
+            else:
+                h2h_color = "#555555"
+            h2h_str = f"&nbsp;&nbsp;<span style='color:{h2h_color};font-size:18px;'>{h2h[0]}-{h2h[1]}</span>"
+        else:
+            h2h_str = ""
+
+        display_name = "schachpinguin" if p['name'].lower() == "schachpinguin3000" else p['name']
 
         rows += (
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
-            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a>{h2h_str}</td>\n"
+            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
             f"      </tr>\n"
