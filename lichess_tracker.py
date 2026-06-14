@@ -49,40 +49,40 @@ def is_online():
     except:
         return False
 
-H2H_PLAYER = "pion-panique"
+H2H_PLAYERS = ["pion-panique", "botfather-slay"]
 
 def fetch_h2h_score(username):
-    if username.lower() == H2H_PLAYER.lower():
+    if username.lower() in [h.lower() for h in H2H_PLAYERS]:
         return None
-    url = (
-        f"https://lichess.org/api/games/user/{H2H_PLAYER}"
-        f"?vs={username}&perf=classical&moves=false&evals=false&opening=false&max=300"
-    )
-    req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
-    wins, losses = 0, 0
-    try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            for line in resp:
-                line = line.strip()
-                if not line:
-                    continue
-                game = json.loads(line.decode())
-                winner = game.get("winner")
-                players = game.get("players", {})
-                white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
-                h2h_is_white = white_id == H2H_PLAYER.lower()
-                if winner == "white":
-                    if h2h_is_white: wins += 1
-                    else: losses += 1
-                elif winner == "black":
-                    if not h2h_is_white: wins += 1
-                    else: losses += 1
-    except Exception as e:
-        print(f"  H2H-Fehler bei {username}: {e}", file=sys.stderr)
+    total_wins, total_losses = 0, 0
+    for h2h_player in H2H_PLAYERS:
+        url = (
+            f"https://lichess.org/api/games/user/{h2h_player}"
+            f"?vs={username}&perf=classical&moves=false&evals=false&opening=false&max=300"
+        )
+        req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                for line in resp:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    game = json.loads(line.decode())
+                    winner = game.get("winner")
+                    players = game.get("players", {})
+                    white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
+                    h2h_is_white = white_id == h2h_player.lower()
+                    if winner == "white":
+                        if h2h_is_white: total_wins += 1
+                        else: total_losses += 1
+                    elif winner == "black":
+                        if not h2h_is_white: total_wins += 1
+                        else: total_losses += 1
+        except Exception as e:
+            print(f"  H2H-Fehler bei {username} vs {h2h_player}: {e}", file=sys.stderr)
+    if total_wins == 0 and total_losses == 0:
         return None
-    if wins == 0 and losses == 0:
-        return None
-    return (wins, losses)
+    return (total_wins, total_losses)
 
 def fetch_user_info(username):
     url = f"https://lichess.org/api/user/{username}"
@@ -202,7 +202,7 @@ def generate_html(players_data):
         row_num += 1
 
         h2h = p.get("h2h")
-        h2h_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;'>{h2h[0]} – {h2h[1]}</span>" if h2h else ""
+        h2h_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;'>{h2h[0]}-{h2h[1]}</span>" if h2h else ""
 
         rows += (
             f"      <tr>\n"
