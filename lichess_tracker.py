@@ -49,7 +49,7 @@ def is_online():
     except:
         return False
 
-H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17"]
+H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
 
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
