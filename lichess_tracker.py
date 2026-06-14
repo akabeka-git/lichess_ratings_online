@@ -49,6 +49,41 @@ def is_online():
     except:
         return False
 
+H2H_PLAYER = "pion-panique"
+
+def fetch_h2h_score(username):
+    if username.lower() == H2H_PLAYER.lower():
+        return None
+    url = (
+        f"https://lichess.org/api/games/user/{H2H_PLAYER}"
+        f"?vs={username}&perf=classical&moves=false&evals=false&opening=false&max=300"
+    )
+    req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+    wins, losses = 0, 0
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            for line in resp:
+                line = line.strip()
+                if not line:
+                    continue
+                game = json.loads(line.decode())
+                winner = game.get("winner")
+                players = game.get("players", {})
+                white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
+                h2h_is_white = white_id == H2H_PLAYER.lower()
+                if winner == "white":
+                    if h2h_is_white: wins += 1
+                    else: losses += 1
+                elif winner == "black":
+                    if not h2h_is_white: wins += 1
+                    else: losses += 1
+    except Exception as e:
+        print(f"  H2H-Fehler bei {username}: {e}", file=sys.stderr)
+        return None
+    if wins == 0 and losses == 0:
+        return None
+    return (wins, losses)
+
 def fetch_user_info(username):
     url = f"https://lichess.org/api/user/{username}"
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
@@ -102,7 +137,8 @@ def fetch_player_data(username):
     except Exception as e:
         print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
         diff = 0
-    return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "error": False}
+    h2h = fetch_h2h_score(username)
+    return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "h2h": h2h, "error": False}
 
 def generate_html(players_data):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
@@ -165,10 +201,13 @@ def generate_html(players_data):
         prev_hundred = current_hundred
         row_num += 1
 
+        h2h = p.get("h2h")
+        h2h_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;'>{h2h[0]} – {h2h[1]}</span>" if h2h else ""
+
         rows += (
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
-            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a></td>\n"
+            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{p['name']}</a>{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
             f"      </tr>\n"
