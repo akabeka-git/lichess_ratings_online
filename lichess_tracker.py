@@ -271,7 +271,7 @@ def generate_html(players_data, color_stats=None):
     if color_stats:
         w, b = color_stats
         color_html = f"""  <br>
-  <div style="font-size:16px;color:#555555;">gespielt als Weiss&nbsp;&nbsp;{w}<br>gespielt als Schwarz&nbsp;&nbsp;{b}</div>
+  <div style="font-size:19px;color:#555555;">weisse Partien <span style="color:#ffffff;">{w} </span> &nbsp;–&nbsp; schwarze Partien <span style="color:#ffffff;">{b}</span></div>
 """
 
     html = f"""<!DOCTYPE html>
