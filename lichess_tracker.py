@@ -51,6 +51,34 @@ def is_online():
 
 H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
 
+COLOR_STATS_PLAYERS = ["pion-panique", "tric-k_17", "botfather-slay"]
+SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
+
+def fetch_color_stats():
+    total_white, total_black = 0, 0
+    for username in COLOR_STATS_PLAYERS:
+        url = (
+            f"https://lichess.org/api/games/user/{username}"
+            f"?since={SINCE_2026}&moves=false&evals=false&opening=false"
+        )
+        req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                for line in resp:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    game = json.loads(line.decode())
+                    players = game.get("players", {})
+                    white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
+                    if white_id == username.lower():
+                        total_white += 1
+                    else:
+                        total_black += 1
+        except Exception as e:
+            print(f"  Farbstatistik-Fehler bei {username}: {e}", file=sys.stderr)
+    return total_white, total_black
+
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
         return None
@@ -147,7 +175,7 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data):
+def generate_html(players_data, color_stats=None):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -237,6 +265,13 @@ def generate_html(players_data):
             f"      </tr>\n"
         )
 
+    color_html = ""
+    if color_stats:
+        w, b = color_stats
+        color_html = f"""  <br>
+  <div style="font-size:16px;color:#555555;">gespielt als Weiss&nbsp;&nbsp;{w}<br>gespielt als Schwarz&nbsp;&nbsp;{b}</div>
+"""
+
     html = f"""<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -301,7 +336,7 @@ def generate_html(players_data):
     <tbody>
 {rows}    </tbody>
   </table>
-</div>
+{color_html}</div>
 </body>
 </html>"""
     return html
@@ -335,8 +370,11 @@ def main():
 
     players_data.sort(key=lambda p: p["rating"], reverse=True)
 
+    print("  Rufe Farbstatistiken ab ...")
+    color_stats = fetch_color_stats()
+
     os.makedirs(PUBLIC_DIR, exist_ok=True)
-    html = generate_html(players_data)
+    html = generate_html(players_data, color_stats)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)
 
