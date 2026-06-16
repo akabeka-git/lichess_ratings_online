@@ -77,6 +77,7 @@ def fetch_color_stats():
                         total_black += 1
         except Exception as e:
             print(f"  Farbstatistik-Fehler bei {username}: {e}", file=sys.stderr)
+        time.sleep(2)
     return total_white, total_black
 
 def fetch_h2h_score(username):
@@ -110,6 +111,7 @@ def fetch_h2h_score(username):
                         else: total_losses += 1
         except Exception as e:
             print(f"  H2H-Fehler bei {username} vs {h2h_player}: {e}", file=sys.stderr)
+        time.sleep(2)
     if total_wins == 0 and total_losses == 0 and total_draws == 0:
         return None
     my_score = total_wins + total_draws * 0.5
