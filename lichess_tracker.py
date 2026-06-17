@@ -271,7 +271,7 @@ def generate_html(players_data, color_stats=None):
     if color_stats:
         w, b = color_stats
         color_html = f"""  <br>
-  <div style="font-size:19px;color:#555555;">weisse Partien <span style="color:#ffffff;">{w} </span> &nbsp;–&nbsp; schwarze Partien <span style="color:#ffffff;">{b}</span></div>
+  <div style="font-size:19px;color:#555555;text-align:center;">weisse Partien <span style="color:#ffffff;">{w} </span> &nbsp;–&nbsp; schwarze Partien <span style="color:#ffffff;">{b}</span></div>
 """
 
     html = f"""<!DOCTYPE html>
@@ -330,7 +330,7 @@ def generate_html(players_data, color_stats=None):
 </head>
 <body>
 <div class="wrapper">
-  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;width:100%;">
     <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
     <div class="updated">{now_str}</div>
   </div>
