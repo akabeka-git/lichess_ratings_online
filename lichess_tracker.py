@@ -290,8 +290,8 @@ def generate_html(players_data, color_stats=None):
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 4rem 0;
+    align-items: flex-start;
+    padding: 4rem 0 1.5rem 0;
   }}
   .wrapper {{
     display: inline-block;
