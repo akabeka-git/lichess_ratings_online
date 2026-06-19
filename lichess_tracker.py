@@ -218,8 +218,7 @@ def generate_html(players_data, color_stats=None):
         text_color   = dim65(base_color) if p.get("provisional") else base_color
         rating_color = text_color
 
-        ITALIC_PLAYERS = {"maia3-79m_600", "maia3-79m_800", "maia1", "maia5"}
-        is_italic = p["name"].lower() in {m.lower() for m in ITALIC_PLAYERS}
+        is_italic = p["name"].lower().startswith("maia")
 
         name_style   = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
         rating_style = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
@@ -272,6 +271,7 @@ def generate_html(players_data, color_stats=None):
         w, b = color_stats
         color_html = f"""  <br>
   <div style="font-size:19px;color:#555555;text-align:center;">weisse Partien <span style="color:#ffffff;">{w} </span> &nbsp;–&nbsp; schwarze Partien <span style="color:#ffffff;">{b}</span></div>
+  <br>
 """
 
     html = f"""<!DOCTYPE html>
