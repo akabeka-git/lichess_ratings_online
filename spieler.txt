@@ -27,6 +27,7 @@ DedSemen
 botfather-slay
 maia3-79m_600
 maia3-79m_800
+maia3-79m_1000
 maia1
 maia5
 tradernayem143
