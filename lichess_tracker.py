@@ -55,7 +55,7 @@ COLOR_STATS_PLAYERS = ["pion-panique", "tric-k_17", "botfather-slay"]
 SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
 
 def fetch_color_stats():
-    total_white, total_black = 0, 0
+    total_white, total_black, total_seconds = 0, 0, 0
     for username in COLOR_STATS_PLAYERS:
         url = (
             f"https://lichess.org/api/games/user/{username}"
@@ -75,10 +75,17 @@ def fetch_color_stats():
                         total_white += 1
                     else:
                         total_black += 1
+                    created = game.get("createdAt", 0)
+                    last_move = game.get("lastMoveAt", 0)
+                    if created and last_move:
+                        total_seconds += (last_move - created) / 1000
         except Exception as e:
             print(f"  Farbstatistik-Fehler bei {username}: {e}", file=sys.stderr)
         time.sleep(2)
-    return total_white, total_black
+    days    = int(total_seconds // 86400)
+    hours   = int((total_seconds % 86400) // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    return total_white, total_black, days, hours, minutes
 
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
@@ -268,9 +275,11 @@ def generate_html(players_data, color_stats=None):
 
     color_html = ""
     if color_stats:
-        w, b = color_stats
+        w, b, days, hours, minutes = color_stats
         color_html = f"""  <br>
   <div style="font-size:19px;color:#555555;text-align:center;">weisse Partien <span style="color:#ffffff;">{w} </span> &nbsp;–&nbsp; schwarze Partien <span style="color:#ffffff;">{b}</span></div>
+  <br>
+  <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: <span style="color:#ffffff;">{days}</span> Tage: <span style="color:#ffffff;">{hours}</span> Std.: <span style="color:#ffffff;">{minutes}</span> Min.</div>
   <br>
 """
 
