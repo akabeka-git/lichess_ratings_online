@@ -276,10 +276,10 @@ def generate_html(players_data, color_stats=None):
     color_html = ""
     if color_stats:
         w, b, days, hours, minutes = color_stats
-        color_html = f"""  <br>
+        color_html = f"""  <br><br>
   <div style="font-size:19px;color:#555555;text-align:center;">Partien: weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span></div>
   <br>
-  <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: <span style="color:#ffffff;">{days}</span> Tage&nbsp;&nbsp;<span style="color:#ffffff;">{hours}</span> Std.&nbsp;&nbsp;<span style="color:#ffffff;">{minutes}</span> Min.</div>
+  <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <br>
 """
 
