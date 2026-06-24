@@ -285,9 +285,6 @@ def generate_html(players_data, color_stats=None):
 
     color_html = ""
     if color_stats:
-        w, b, days, hours, minutes = color_stats
-        color_html = ""
-    if color_stats:
         w, b, days, hours, minutes, wins, losses = color_stats
         color_html = f"""  <br><br>
   <div style="font-size:19px;color:#555555;text-align:center;">Partien<br>
