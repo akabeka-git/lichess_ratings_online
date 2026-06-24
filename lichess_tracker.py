@@ -56,6 +56,7 @@ SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
 
 def fetch_color_stats():
     total_white, total_black, total_seconds = 0, 0, 0
+    total_wins, total_losses = 0, 0
     for username in COLOR_STATS_PLAYERS:
         url = (
             f"https://lichess.org/api/games/user/{username}"
@@ -71,10 +72,19 @@ def fetch_color_stats():
                     game = json.loads(line.decode())
                     players = game.get("players", {})
                     white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
-                    if white_id == username.lower():
+                    black_id = players.get("black", {}).get("user", {}).get("id", "").lower()
+                    is_white = white_id == username.lower()
+                    if is_white:
                         total_white += 1
                     else:
                         total_black += 1
+                    winner = game.get("winner")
+                    if winner == "white":
+                        if is_white: total_wins += 1
+                        else: total_losses += 1
+                    elif winner == "black":
+                        if not is_white: total_wins += 1
+                        else: total_losses += 1
                     created = game.get("createdAt", 0)
                     last_move = game.get("lastMoveAt", 0)
                     if created and last_move:
@@ -85,7 +95,7 @@ def fetch_color_stats():
     days    = int(total_seconds // 86400)
     hours   = int((total_seconds % 86400) // 3600)
     minutes = int((total_seconds % 3600) // 60)
-    return total_white, total_black, days, hours, minutes
+    return total_white, total_black, days, hours, minutes, total_wins, total_losses
 
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
@@ -276,8 +286,13 @@ def generate_html(players_data, color_stats=None):
     color_html = ""
     if color_stats:
         w, b, days, hours, minutes = color_stats
+        color_html = ""
+    if color_stats:
+        w, b, days, hours, minutes, wins, losses = color_stats
         color_html = f"""  <br><br>
-  <div style="font-size:19px;color:#555555;text-align:center;">Partien: weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span></div>
+  <div style="font-size:19px;color:#555555;text-align:center;">Partien<br>
+  weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>
+  gewonnen <span style="color:#ffffff;">{wins}</span> – verloren <span style="color:#ffffff;">{losses}</span></div>
   <br>
   <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <br>
