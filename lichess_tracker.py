@@ -56,7 +56,7 @@ SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
 
 def fetch_color_stats():
     total_white, total_black, total_seconds = 0, 0, 0
-    total_wins, total_losses = 0, 0
+    total_wins, total_losses, total_draws = 0, 0, 0
     for username in COLOR_STATS_PLAYERS:
         url = (
             f"https://lichess.org/api/games/user/{username}"
@@ -85,6 +85,8 @@ def fetch_color_stats():
                     elif winner == "black":
                         if not is_white: total_wins += 1
                         else: total_losses += 1
+                    else:
+                        total_draws += 1
                     created = game.get("createdAt", 0)
                     last_move = game.get("lastMoveAt", 0)
                     if created and last_move:
@@ -95,7 +97,7 @@ def fetch_color_stats():
     days    = int(total_seconds // 86400)
     hours   = int((total_seconds % 86400) // 3600)
     minutes = int((total_seconds % 3600) // 60)
-    return total_white, total_black, days, hours, minutes, total_wins, total_losses
+    return total_white, total_black, days, hours, minutes, total_wins, total_draws, total_losses
 
 def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
@@ -285,11 +287,11 @@ def generate_html(players_data, color_stats=None):
 
     color_html = ""
     if color_stats:
-        w, b, days, hours, minutes, wins, losses = color_stats
+        w, b, days, hours, minutes, wins, draws, losses = color_stats
         color_html = f"""  <br><br>
   <div style="font-size:19px;color:#555555;text-align:center;">Partien<br>
   weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>
-  gewonnen {wins} – verloren {losses}</div>
+  gewonnen {wins} – remis {draws} – verloren {losses}</div>
   <br>
   <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <br>
