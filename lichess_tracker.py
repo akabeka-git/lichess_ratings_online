@@ -24,17 +24,27 @@ def load_players():
     seen = set()
     players = []
     for account in HIGHLIGHT_PLAYERS:
-        # Highlight-Spieler selbst immer dabei
         if account.lower() not in seen:
             seen.add(account.lower())
             players.append(account)
-    token = os.environ.get("LICHESS_TOKEN", "")
-    headers = {"Accept": "application/x-ndjson"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+
+    token_map = {
+        "tric-k_17":     os.environ.get("LICHESS_TOKEN_TRIC", ""),
+        "pion-panique":  os.environ.get("LICHESS_TOKEN_PION", ""),
+        "botfather-slay": os.environ.get("LICHESS_TOKEN_BOTFATHER", ""),
+        "panic-pawn":    os.environ.get("LICHESS_TOKEN_PANIC", ""),
+    }
+
     for account in HIGHLIGHT_PLAYERS:
-        url = f"https://lichess.org/api/user/{account}/following"
-        req = urllib.request.Request(url, headers=headers)
+        token = token_map.get(account, "")
+        if not token:
+            print(f"  Kein Token für {account} — überspringe.", file=sys.stderr)
+            continue
+        url = "https://lichess.org/api/rel/following"
+        req = urllib.request.Request(url, headers={
+            "Accept": "application/x-ndjson",
+            "Authorization": f"Bearer {token}"
+        })
         try:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 for line in resp:
@@ -46,10 +56,11 @@ def load_players():
                     if name and name.lower() not in seen:
                         seen.add(name.lower())
                         players.append(name)
+            print(f"  {account}: Following geladen.")
         except Exception as e:
             print(f"  Following-Fehler bei {account}: {e}", file=sys.stderr)
         time.sleep(1)
-    print(f"  {len(players)} Spieler aus Following-Listen geladen.")
+    print(f"  {len(players)} Spieler gesamt.")
     return players
 
 def load_cache():

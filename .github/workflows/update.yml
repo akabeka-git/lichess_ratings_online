@@ -23,7 +23,10 @@ jobs:
 
       - name: Run Lichess tracker
         env:
-          LICHESS_TOKEN: ${{ secrets.LICHESS_TOKEN }}
+          LICHESS_TOKEN_TRIC:      ${{ secrets.LICHESS_TOKEN_TRIC }}
+          LICHESS_TOKEN_PION:      ${{ secrets.LICHESS_TOKEN_PION }}
+          LICHESS_TOKEN_BOTFATHER: ${{ secrets.LICHESS_TOKEN_BOTFATHER }}
+          LICHESS_TOKEN_PANIC:     ${{ secrets.LICHESS_TOKEN_PANIC }}
         run: python lichess_tracker.py
 
       - name: Commit updated files
