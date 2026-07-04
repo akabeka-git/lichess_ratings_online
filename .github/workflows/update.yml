@@ -33,4 +33,4 @@ jobs:
           git add docs/index.html werte.json
           git diff --staged --quiet \
             && echo "Keine Änderungen." \
-            || (git pull --rebase origin main && git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git push)
+            || (git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git pull --rebase origin main && git push)
