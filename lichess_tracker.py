@@ -266,9 +266,9 @@ def generate_html(players_data, color_stats=None):
                 played_recently = days_ago < 7
 
         if played_recently:
-            base_color = "#a68900" if (is_highlight or p.get("provisional")) else "#ffd700"
+            base_color = "#a68900" if p.get("provisional") else "#ffd700"
         else:
-            base_color = "#a6a6a6" if (is_highlight or p.get("provisional")) else "#ffffff"
+            base_color = "#a6a6a6" if p.get("provisional") else "#ffffff"
 
         def dim65(hex_color):
             h = hex_color.lstrip("#")
