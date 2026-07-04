@@ -21,15 +21,31 @@ CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn", "botfather-slay"}
 
 def load_players():
-    if not os.path.exists(PLAYERS_FILE):
-        print(f"FEHLER: {PLAYERS_FILE} nicht gefunden!", file=sys.stderr)
-        sys.exit(1)
+    seen = set()
     players = []
-    with open(PLAYERS_FILE, encoding="utf-8") as f:
-        for line in f:
-            name = line.strip()
-            if name and not name.startswith("#"):
-                players.append(name)
+    for account in HIGHLIGHT_PLAYERS:
+        # Highlight-Spieler selbst immer dabei
+        if account.lower() not in seen:
+            seen.add(account.lower())
+            players.append(account)
+    for account in HIGHLIGHT_PLAYERS:
+        url = f"https://lichess.org/api/user/{account}/following"
+        req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                for line in resp:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    user = json.loads(line.decode())
+                    name = user.get("username", "")
+                    if name and name.lower() not in seen:
+                        seen.add(name.lower())
+                        players.append(name)
+        except Exception as e:
+            print(f"  Following-Fehler bei {account}: {e}", file=sys.stderr)
+        time.sleep(1)
+    print(f"  {len(players)} Spieler aus Following-Listen geladen.")
     return players
 
 def load_cache():
@@ -255,7 +271,7 @@ def generate_html(players_data, color_stats=None):
 
         current_hundred = p["rating"] // 100
         if prev_hundred is not None and current_hundred < prev_hundred:
-            rows += '      <tr><td colspan="4" style="border-top:1px solid #333333;padding:3px 0 0 0;"></td></tr>\n'
+            rows += '      <tr><td colspan="4" style="border-top:1px solid #666666;padding:3px 0 0 0;"></td></tr>\n'
         prev_hundred = current_hundred
         row_num += 1
 
