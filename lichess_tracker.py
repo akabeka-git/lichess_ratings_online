@@ -28,9 +28,13 @@ def load_players():
         if account.lower() not in seen:
             seen.add(account.lower())
             players.append(account)
+    token = os.environ.get("LICHESS_TOKEN", "")
+    headers = {"Accept": "application/x-ndjson"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     for account in HIGHLIGHT_PLAYERS:
         url = f"https://lichess.org/api/user/{account}/following"
-        req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+        req = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 for line in resp:
