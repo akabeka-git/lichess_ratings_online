@@ -29,10 +29,10 @@ def load_players():
             players.append(account)
 
     token_map = {
-        "tric-k_17":     os.environ.get("LICHESS_TOKEN_TRIC", ""),
-        "pion-panique":  os.environ.get("LICHESS_TOKEN_PION", ""),
+        "tric-k_17":      os.environ.get("LICHESS_TOKEN_TRIC", ""),
+        "pion-panique":   os.environ.get("LICHESS_TOKEN_PION", ""),
         "botfather-slay": os.environ.get("LICHESS_TOKEN_BOTFATHER", ""),
-        "panic-pawn":    os.environ.get("LICHESS_TOKEN_PANIC", ""),
+        "panic-pawn":     os.environ.get("LICHESS_TOKEN_PANIC", ""),
     }
 
     for account in HIGHLIGHT_PLAYERS:
@@ -60,6 +60,16 @@ def load_players():
         except Exception as e:
             print(f"  Following-Fehler bei {account}: {e}", file=sys.stderr)
         time.sleep(1)
+
+    # Manuelle Ergänzungsliste
+    if os.path.exists(PLAYERS_FILE):
+        with open(PLAYERS_FILE, encoding="utf-8") as f:
+            for line in f:
+                name = line.strip()
+                if name and not name.startswith("#") and name.lower() not in seen:
+                    seen.add(name.lower())
+                    players.append(name)
+
     print(f"  {len(players)} Spieler gesamt.")
     return players
 
