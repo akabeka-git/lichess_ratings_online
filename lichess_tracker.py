@@ -296,7 +296,7 @@ def generate_html(players_data, color_stats=None):
 
         current_hundred = p["rating"] // 100
         if prev_hundred is not None and current_hundred < prev_hundred:
-            rows += '      <tr><td colspan="4" style="border-top:1px solid #666666;padding:3px 0 0 0;"></td></tr>\n'
+            rows += '      <tr><td colspan="4" style="border-top:2px solid #666666;padding:3px 0 0 0;"></td></tr>\n'
         prev_hundred = current_hundred
         row_num += 1
 
@@ -329,8 +329,9 @@ def generate_html(players_data, color_stats=None):
     color_html = ""
     if color_stats:
         w, b, days, hours, minutes, wins, draws, losses = color_stats
+        total = w + b
         color_html = f"""  <br><br>
-  <div style="font-size:19px;color:#555555;text-align:center;">Partien<br>
+  <div style="font-size:19px;color:#555555;text-align:center;">{total} Partien<br>
   weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>
   gewonnen {wins} – remis {draws} – verloren {losses}</div>
   <br>
