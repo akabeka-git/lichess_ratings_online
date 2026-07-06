@@ -317,12 +317,15 @@ def generate_html(players_data, color_stats=None):
         if is_highlight:
             display_name = f"&gt;&gt; {display_name}"
 
+        arrow = p.get("pos_arrow", "")
+        arrow_html = f"&nbsp;<span style='color:#555555;font-size:14px;'>{arrow}</span>" if arrow else ""
+
         rows += (
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
-            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
+            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{arrow_html}</td>\n"
             f"      </tr>\n"
         )
 
@@ -330,14 +333,8 @@ def generate_html(players_data, color_stats=None):
     if color_stats:
         w, b, days, hours, minutes, wins, draws, losses = color_stats
         total = w + b
-        color_html = f"""  <br><br>
-  <div style="font-size:19px;color:#555555;text-align:center;">{total} Partien<br>
-  weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>
-  gewonnen {wins} – remis {draws} – verloren {losses}<br>
-  <br>
-  Gesamtspielzeit<br>
-  {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
-  <br>
+        color_html = f"""  <div style="margin-top:2em;font-size:19px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br><br>weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br><br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
+  <div style="margin-bottom:1.5em;"></div>
 """
 
     html = f"""<!DOCTYPE html>
@@ -434,9 +431,44 @@ def main():
                 cache[key] = {"diff": p["diff"], "last_played": today_str}
             elif key in cache:
                 p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
-    save_cache(cache)
 
     players_data.sort(key=lambda p: p["rating"], reverse=True)
+
+    # Täglichen Positionssnapshot speichern
+    snapshots = cache.get("_snapshots", {})
+    snapshots[today_str] = {p["name"].lower(): i+1 for i, p in enumerate(players_data) if not p["error"]}
+    # Snapshots älter als 21 Tage löschen
+    cutoff = (date.today() - __import__("datetime").timedelta(days=21)).isoformat()
+    snapshots = {d: v for d, v in snapshots.items() if d >= cutoff}
+    cache["_snapshots"] = snapshots
+    save_cache(cache)
+
+    # Position vor ~7 Tagen ermitteln
+    target_date = (date.today() - __import__("datetime").timedelta(days=14)).isoformat()
+    available = sorted(d for d in snapshots if d <= target_date)
+    old_positions = snapshots[available[-1]] if available else {}
+
+    # Positionspfeile berechnen
+    for i, p in enumerate(players_data):
+        if p["error"]:
+            p["pos_arrow"] = ""
+            continue
+        current_pos = i + 1
+        old_pos = old_positions.get(p["name"].lower())
+        if old_pos is None:
+            p["pos_arrow"] = ""
+        else:
+            delta = old_pos - current_pos  # positiv = gestiegen
+            if delta >= 4:
+                p["pos_arrow"] = "↑↑"
+            elif delta >= 1:
+                p["pos_arrow"] = "↑"
+            elif delta <= -4:
+                p["pos_arrow"] = "↓↓"
+            elif delta <= -1:
+                p["pos_arrow"] = "↓"
+            else:
+                p["pos_arrow"] = ""
 
     print("  Rufe Farbstatistiken ab ...")
     color_stats = fetch_color_stats()
