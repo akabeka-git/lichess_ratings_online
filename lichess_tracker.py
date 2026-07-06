@@ -443,32 +443,38 @@ def main():
     cache["_snapshots"] = snapshots
     save_cache(cache)
 
-    # Position vor ~7 Tagen ermitteln
-    target_date = (date.today() - __import__("datetime").timedelta(days=14)).isoformat()
-    available = sorted(d for d in snapshots if d <= target_date)
-    old_positions = snapshots[available[-1]] if available else {}
-
-    # Positionspfeile berechnen
+    # Positionstrend per linearer Regression über letzte 21 Tage
+    from statistics import linear_regression
     for i, p in enumerate(players_data):
         if p["error"]:
             p["pos_arrow"] = ""
             continue
-        current_pos = i + 1
-        old_pos = old_positions.get(p["name"].lower())
-        if old_pos is None:
+        key = p["name"].lower()
+        points = []
+        for d, snap in sorted(snapshots.items()):
+            if key in snap:
+                days_ago = (date.today() - date.fromisoformat(d)).days
+                points.append((days_ago, snap[key]))
+        if len(points) < 3:
             p["pos_arrow"] = ""
-        else:
-            delta = old_pos - current_pos  # positiv = gestiegen
-            if delta >= 4:
+            continue
+        xs = [pt[0] for pt in points]
+        ys = [pt[1] for pt in points]
+        try:
+            slope, _ = linear_regression(xs, ys)
+            # slope negativ = Position verbessert (kleinere Zahl = besser)
+            if slope <= -0.6:
                 p["pos_arrow"] = "↑↑"
-            elif delta >= 1:
+            elif slope <= -0.3:
                 p["pos_arrow"] = "↑"
-            elif delta <= -4:
+            elif slope >= 0.6:
                 p["pos_arrow"] = "↓↓"
-            elif delta <= -1:
+            elif slope >= 0.3:
                 p["pos_arrow"] = "↓"
             else:
                 p["pos_arrow"] = ""
+        except Exception:
+            p["pos_arrow"] = ""
 
     print("  Rufe Farbstatistiken ab ...")
     color_stats = fetch_color_stats()
