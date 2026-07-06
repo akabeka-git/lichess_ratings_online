@@ -333,9 +333,10 @@ def generate_html(players_data, color_stats=None):
         color_html = f"""  <br><br>
   <div style="font-size:19px;color:#555555;text-align:center;">{total} Partien<br>
   weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>
-  gewonnen {wins} – remis {draws} – verloren {losses}</div>
+  gewonnen {wins} – remis {draws} – verloren {losses}<br>
   <br>
-  <div style="font-size:19px;color:#555555;text-align:center;">Gesamtspielzeit: {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
+  Gesamtspielzeit<br>
+  {days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <br>
 """
 
