@@ -1,0 +1,81 @@
+
+cd /home/fieps3000/Documents/fieps_scripts_progr/lichess_ratings_online
+git add lichess_tracker.py
+git commit -m "update"
+git pp
+
+username:
+akabeka-git
+
+
+paste in terminal ctr+shift+V
+
+
+
+Lichess Tracker — Kurzreferenz
+
+Nach Spieleranpassung im txt
+cd /home/fieps3000/Documents/fieps_scripts_progr/lichess_ratings_online
+git add spieler.txt
+git commit -m "spieler angepasst"
+git pp
+
+
+---- old ----
+cd /home/fieps3000/Documents/fieps_scripts_progr/lichess_ratings_online
+nano spieler.txt
+git add spieler.txt
+git commit -m "spieler.txt angepasst"
+git push
+
+Push wird rejected (GitHub Actions hat zwischenzeitlich gepusht)
+
+git pull origin main --no-rebase
+git push
+
+# Merge-Nachricht: Ctrl+O Enter Ctrl+X
+
+
+dann Seite manuell Firefox sofort aktualisieren
+
+github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml
+
+Danach auf GitHub → Actions → Run workflow.
+
+
+
+-> neue py hochladen
+
+cd /home/fieps3000/Documents/fieps_scripts_progr/lichess_ratings_online
+# neues lichess_tracker.py reinkopieren, dann:
+git add lichess_tracker.py
+git commit -m "layout: highlight kursiv+fett"
+git push
+
+
+
+
+
+Script anpassen (z.B. neue Highlight-Spieler)
+bashnano lichess_tracker.py
+git add lichess_tracker.py
+git commit -m "script angepasst"
+git push
+
+
+
+Automatisches Update
+Läuft jeden Tag stündlich um :05 automatisch — nichts tun nötig.
+
+Wichtige Dateien
+DateiZweckspieler.txtSpielerlistewerte.jsonDiff-Cache (nicht manuell bearbeiten)lichess_tracker.pyHaupt-Script.github/workflows/update.ymlGitHub Actions Zeitplan
+
+
+
+
+
+--------------------
+git remote add origin https://github.com/akabeka-git/lichess_ratings_online.git
+git push -u origin main
+
+git config --global alias.pp '!git pull --rebase origin main && git push'

@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""
+Lichess Classic Ratings Tracker — Multi-Spieler
+"""
+
+import json
+import urllib.request
+import urllib.error
+from datetime import datetime, timezone, date
+import os
+import sys
+import time
+
+SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
+PLAYERS_FILE = os.path.join(SCRIPT_DIR, "spieler.txt")
+PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "docs")
+OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
+CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
+
+# Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
+HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn", "botfather-slay"}
+
+def load_players():
+    if not os.path.exists(PLAYERS_FILE):
+        print(f"FEHLER: {PLAYERS_FILE} nicht gefunden!", file=sys.stderr)
+        sys.exit(1)
+    players = []
+    with open(PLAYERS_FILE, encoding="utf-8") as f:
+        for line in f:
+            name = line.strip()
+            if name and not name.startswith("#"):
+                players.append(name)
+    return players
+
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+def save_cache(cache):
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(cache, f)
+
+def is_online():
+    try:
+        urllib.request.urlopen("https://lichess.org", timeout=5)
+        return True
+    except:
+        return False
+
+H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
+
+def fetch_h2h_score(username):
+    if username.lower() in [h.lower() for h in H2H_PLAYERS]:
+        return None
+    total_wins, total_losses = 0, 0
+    for h2h_player in H2H_PLAYERS:
+        url = (
+            f"https://lichess.org/api/games/user/{h2h_player}"
+            f"?vs={username}&perf=classical&moves=false&evals=false&opening=false&max=300"
+        )
+        req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                for line in resp:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    game = json.loads(line.decode())
+                    winner = game.get("winner")
+                    players = game.get("players", {})
+                    white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
+                    h2h_is_white = white_id == h2h_player.lower()
+                    if winner == "white":
+                        if h2h_is_white: total_wins += 1
+                        else: total_losses += 1
+                    elif winner == "black":
+                        if not h2h_is_white: total_wins += 1
+                        else: total_losses += 1
+        except Exception as e:
+            print(f"  H2H-Fehler bei {username} vs {h2h_player}: {e}", file=sys.stderr)
+    if total_wins == 0 and total_losses == 0:
+        return None
+    return (total_wins, total_losses)
+
+def fetch_user_info(username):
+    url = f"https://lichess.org/api/user/{username}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode())
+
+def fetch_todays_classic_games(username):
+    url = (
+        f"https://lichess.org/api/games/user/{username}"
+        f"?max=100&moves=false&evals=false&opening=false"
+    )
+    req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
+    games = []
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        for line in resp:
+            line = line.strip()
+            if line:
+                game = json.loads(line.decode())
+                ts = game.get("lastMoveAt", game.get("createdAt", 0)) / 1000
+                is_today = datetime.fromtimestamp(ts).date() == date.today()
+                is_classical = game.get("perf") == "classical"
+                if is_today and is_classical:
+                    games.append(game)
+    return games
+
+def calculate_daily_diff(games, username):
+    username_lower = username.lower()
+    total_diff = 0
+    for g in games:
+        players = g.get("players", {})
+        white = players.get("white", {})
+        black = players.get("black", {})
+        if white.get("user", {}).get("id", "").lower() == username_lower:
+            total_diff += white.get("ratingDiff", 0) or 0
+        elif black.get("user", {}).get("id", "").lower() == username_lower:
+            total_diff += black.get("ratingDiff", 0) or 0
+    return total_diff
+
+def fetch_player_data(username):
+    try:
+        user_info = fetch_user_info(username)
+        classical = user_info.get("perfs", {}).get("classical", {})
+        rating = classical.get("rating", 0)
+        provisional = classical.get("prov", False)
+    except Exception as e:
+        print(f"  Fehler bei {username}: {e}", file=sys.stderr)
+        return {"name": username, "rating": 0, "diff": 0, "error": True}
+    try:
+        games_today = fetch_todays_classic_games(username)
+        diff = calculate_daily_diff(games_today, username)
+    except Exception as e:
+        print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
+        diff = 0
+    h2h = fetch_h2h_score(username)
+    return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "h2h": h2h, "error": False}
+
+def generate_html(players_data):
+    months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+    import zoneinfo
+    now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
+    now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
+
+    rows = ""
+    prev_hundred = None
+    row_num = 0
+    for p in players_data:
+        if p["error"]:
+            continue
+        diff = p["diff"]
+        diff_sign = "+" if diff >= 0 else ""
+        is_highlight = p["name"].lower() in {h.lower() for h in HIGHLIGHT_PLAYERS}
+
+        # Gelb wenn in letzten 7 Tagen gespielt
+        from datetime import timedelta
+        cache = load_cache()
+        key = p["name"].lower()
+        played_recently = False
+        if key in cache:
+            entry = cache[key]
+            last_played = entry["last_played"] if isinstance(entry, dict) else None
+            if last_played:
+                days_ago = (date.today() - date.fromisoformat(last_played)).days
+                played_recently = days_ago < 7
+
+        if played_recently:
+            base_color = "#a68900" if (is_highlight or p.get("provisional")) else "#ffd700"
+        else:
+            base_color = "#a6a6a6" if (is_highlight or p.get("provisional")) else "#ffffff"
+
+        def dim65(hex_color):
+            h = hex_color.lstrip("#")
+            r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+            return "#{:02x}{:02x}{:02x}".format(int(r*0.65), int(g*0.65), int(b*0.65))
+
+        text_color   = dim65(base_color) if p.get("provisional") else base_color
+        rating_color = text_color
+
+        ITALIC_PLAYERS = {"maia3-79m_600", "maia3-79m_800", "maia1", "maia5"}
+        is_italic = p["name"].lower() in {m.lower() for m in ITALIC_PLAYERS}
+
+        name_style   = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
+        rating_style = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
+
+        # Differenz: grün / rot / neutral
+        if diff > 0:
+            raw_diff_color = "#5fdd8a" if is_highlight else "#3dbd6a"
+        elif diff < 0:
+            raw_diff_color = "#ff6b6b" if is_highlight else "#cc4444"
+        else:
+            raw_diff_color = base_color
+        diff_color = dim65(raw_diff_color) if p.get("provisional") else raw_diff_color
+
+        diff_str = f"{diff_sign}{diff}" if diff != 0 else ""
+
+        current_hundred = p["rating"] // 100
+        if prev_hundred is not None and current_hundred < prev_hundred:
+            rows += '      <tr><td colspan="4" style="border-top:1px solid #333333;padding:3px 0 0 0;"></td></tr>\n'
+        prev_hundred = current_hundred
+        row_num += 1
+
+        h2h = p.get("h2h")
+        if h2h:
+            if h2h[0] > h2h[1]:
+                h2h_color = "#3d7a52"
+            elif h2h[0] < h2h[1]:
+                h2h_color = "#7a3d3d"
+            else:
+                h2h_color = "#555555"
+            h2h_str = f"&nbsp;&nbsp;<span style='color:{h2h_color};font-size:18px;'>{h2h[0]}-{h2h[1]}</span>"
+        else:
+            h2h_str = ""
+
+        display_name = "schachpinguin" if p['name'].lower() == "schachpinguin3000" else p['name']
+        if is_highlight:
+            display_name = f"&gt;&gt; {display_name} &lt;&lt;"
+
+        rows += (
+            f"      <tr>\n"
+            f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
+            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{h2h_str}</td>\n"
+            f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
+            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</td>\n"
+            f"      </tr>\n"
+        )
+
+    html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lichess classic ratings</title>
+<meta http-equiv="refresh" content="300">
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    background: #1a1a1a;
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 0;
+  }}
+  .wrapper {{
+    display: inline-block;
+    text-align: left;
+  }}
+  h1 {{
+    font-size: 19px;
+    font-weight: normal;
+    color: #dddddd;
+    margin-bottom: 0;
+  }}
+  table {{
+    border-collapse: collapse;
+  }}
+  td {{
+    padding: 0.1rem 2.5rem 0.1rem 0;
+    font-size: 23px;
+    font-weight: normal;
+  }}
+  .updated {{
+    font-size: 16px;
+    color: #dddddd;
+  }}
+  @media (max-width: 600px) {{
+    body {{
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+    }}
+    .wrapper {{
+      transform: scale(0.8);
+      transform-origin: top center;
+    }}
+  }}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;">
+    <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
+    <div class="updated">{now_str}</div>
+  </div>
+  <table>
+    <tbody>
+{rows}    </tbody>
+  </table>
+</div>
+</body>
+</html>"""
+    return html
+
+def main():
+    if not is_online():
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Kein Internet — Script wird beendet.")
+        sys.exit(0)
+
+    PLAYERS = load_players()
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte Lichess-Abruf fuer {len(PLAYERS)} Spieler ...")
+    players_data = []
+    for username in PLAYERS:
+        print(f"  -> {username} ...", end=" ", flush=True)
+        data = fetch_player_data(username)
+        players_data.append(data)
+        print(f"Rating: {data['rating']}, Heute: {'+' if data['diff']>=0 else ''}{data['diff']}")
+        time.sleep(3)
+
+    # Cache laden und Werte mergen
+    cache = load_cache()
+    today_str = date.today().isoformat()
+    for p in players_data:
+        if not p["error"]:
+            key = p["name"].lower()
+            if p["diff"] != 0:
+                cache[key] = {"diff": p["diff"], "last_played": today_str}
+            elif key in cache:
+                p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
+    save_cache(cache)
+
+    players_data.sort(key=lambda p: p["rating"], reverse=True)
+
+    os.makedirs(PUBLIC_DIR, exist_ok=True)
+    html = generate_html(players_data)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"\n  HTML gespeichert: {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    main()
