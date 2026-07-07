@@ -225,6 +225,7 @@ def fetch_player_data(username):
         classical = user_info.get("perfs", {}).get("classical", {})
         rating = classical.get("rating", 0)
         provisional = classical.get("prov", False)
+        rd = classical.get("rd", 0)
     except Exception as e:
         print(f"  Fehler bei {username}: {e}", file=sys.stderr)
         return {"name": username, "rating": 0, "diff": 0, "error": True}
@@ -235,7 +236,7 @@ def fetch_player_data(username):
         print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
         diff = 0
     h2h = fetch_h2h_score(username)
-    return {"name": username, "rating": rating, "provisional": provisional, "diff": diff, "h2h": h2h, "error": False}
+    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "diff": diff, "h2h": h2h, "error": False}
 
 def generate_html(players_data, color_stats=None):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
@@ -317,13 +318,21 @@ def generate_html(players_data, color_stats=None):
         if is_highlight:
             display_name = f"&gt;&gt; {display_name}"
 
+        rd_str = ""
+        if is_highlight:
+            rd_val = p.get("rd")
+            if rd_val:
+                rd_rounded = round(rd_val)
+                warn = "&#9888;&nbsp;" if 100 <= rd_rounded <= 110 else ""
+                rd_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
+
         arrow = p.get("pos_arrow", "")
         arrow_html = f"&nbsp;<span style='color:#555555;font-size:14px;'>{arrow}</span>" if arrow else ""
 
         rows += (
             f"      <tr>\n"
             f"        <td style=\"color:#555555;text-align:right;padding-right:2rem\">{row_num}</td>\n"
-            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{h2h_str}</td>\n"
+            f"        <td style=\"color:{text_color}\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{rd_str}{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};text-align:right;{rating_style}\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{arrow_html}</td>\n"
             f"      </tr>\n"
