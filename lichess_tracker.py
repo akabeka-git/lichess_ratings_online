@@ -311,7 +311,7 @@ def generate_html(players_data, color_stats=None):
                 h2h_color = "#7a3d3d"
             else:
                 h2h_color = "#555555"
-            h2h_str = f"&nbsp;&nbsp;<span style='color:{h2h_color};font-size:18px;'>{h2h[0]}-{h2h[1]}</span>"
+            h2h_str = f"&nbsp;&nbsp;<span style='color:{h2h_color};font-size:0.78em;'>{h2h[0]}-{h2h[1]}</span>"
         else:
             h2h_str = ""
 
@@ -325,19 +325,19 @@ def generate_html(players_data, color_stats=None):
             if rd_val:
                 rd_rounded = round(rd_val)
                 warn = "<svg width='14' height='14' viewBox='0 0 24 24' style='vertical-align:-2px;'><path d='M12 2 L23 21 L1 21 Z' fill='#e8a33d'/><text x='12' y='19' font-size='14' font-weight='bold' fill='#1a1a1a' text-anchor='middle'>!</text></svg>&nbsp;" if 100 <= rd_rounded <= 110 else ""
-                rd_str = f"&nbsp;<span style='color:#555555;font-size:18px;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
+                rd_str = f"&nbsp;<span style='color:#555555;font-size:0.78em;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
 
         prog = p.get("prog", 0)
         if prog > 0:
             prog_symbol = "&#9650;"
-            sym_size = "20px"
+            sym_class = "sym-tri"
         elif prog < 0:
             prog_symbol = "&#9660;"
-            sym_size = "20px"
+            sym_class = "sym-tri"
         else:
             prog_symbol = "&#9679;"
-            sym_size = "16px"
-        arrow_html = f"&nbsp;<span style='color:#6b6b6b;font-size:{sym_size};font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>"
+            sym_class = "sym-dot"
+        arrow_html = f"&nbsp;<span class='{sym_class}' style='color:#6b6b6b;font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>"
 
         rows += (
             f"      <tr>\n"
@@ -403,6 +403,12 @@ def generate_html(players_data, color_stats=None):
   .rownum {{
     padding-right: 2rem;
   }}
+  .sym-tri {{
+    font-size: 20px;
+  }}
+  .sym-dot {{
+    font-size: 16px;
+  }}
   .updated {{
     font-size: 16px;
     color: #dddddd;
@@ -431,6 +437,12 @@ def generate_html(players_data, color_stats=None):
     }}
     .rownum {{
       padding-right: 0.8rem !important;
+    }}
+    .sym-tri {{
+      font-size: 17px;
+    }}
+    .sym-dot {{
+      font-size: 13.6px;
     }}
   }}
 </style>
