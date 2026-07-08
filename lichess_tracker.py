@@ -195,6 +195,9 @@ def fetch_blog_stats():
         if not likes_match:
             likes_match = re.search(r'class="[^"]*like[^"]*"[^>]*>\D*(\d+)', html)
         likes = likes_match.group(1) if likes_match else None
+        print(f"  Blog-Stats: views={views}, likes={likes}")
+        if views is None or likes is None:
+            print(f"  Blog-Debug (erste 500 Zeichen): {html[:500]}", file=sys.stderr)
         return views, likes
     except Exception as e:
         print(f"  Blog-Abruf fehlgeschlagen: {e}", file=sys.stderr)
@@ -349,11 +352,14 @@ def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=No
         prog = p.get("prog", 0)
         if prog > 0:
             prog_symbol = "&#9650;"
+            sym_size = "20px"
         elif prog < 0:
             prog_symbol = "&#9660;"
+            sym_size = "20px"
         else:
             prog_symbol = "&#9679;"
-        arrow_html = f"&nbsp;<span style='color:#858585;font-size:20px;'>{prog_symbol}</span>"
+            sym_size = "16px"
+        arrow_html = f"&nbsp;<span style='color:#6b6b6b;font-size:{sym_size};'>{prog_symbol}</span>"
 
         rows += (
             f"      <tr>\n"
