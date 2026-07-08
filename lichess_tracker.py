@@ -341,7 +341,7 @@ def generate_html(players_data, color_stats=None):
 
         rows += (
             f"      <tr>\n"
-            f"        <td style=\"color:#555555;text-align:right;padding-right:2rem;white-space:nowrap;\">{row_num}</td>\n"
+            f"        <td class=\"rownum\" style=\"color:#555555;text-align:right;white-space:nowrap;\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color};white-space:nowrap;\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{rd_str}{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}white-space:nowrap;\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};text-align:right;{rating_style}white-space:nowrap;\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{arrow_html}</td>\n"
@@ -400,6 +400,9 @@ def generate_html(players_data, color_stats=None):
     font-size: 23px;
     font-weight: normal;
   }}
+  .rownum {{
+    padding-right: 2rem;
+  }}
   .updated {{
     font-size: 16px;
     color: #dddddd;
@@ -409,7 +412,7 @@ def generate_html(players_data, color_stats=None):
     body {{
       align-items: flex-start;
       justify-content: center;
-      padding: 1.5rem 0.5rem;
+      padding: 1.2rem 0.5rem;
     }}
     .wrapper {{
       transform: none;
@@ -417,14 +420,17 @@ def generate_html(players_data, color_stats=None):
       overflow-x: hidden;
     }}
     h1 {{
-      font-size: 14px;
+      font-size: 17px;
     }}
     .updated {{
-      font-size: 11px;
+      font-size: 13px;
     }}
     td {{
-      font-size: 14px;
-      padding: 0.1rem 0.8rem 0.1rem 0;
+      font-size: 20px;
+      padding: 0.1rem 1rem 0.1rem 0;
+    }}
+    .rownum {{
+      padding-right: 0.8rem !important;
     }}
   }}
 </style>
