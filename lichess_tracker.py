@@ -405,9 +405,11 @@ def generate_html(players_data, color_stats=None):
   }}
   .sym-tri {{
     font-size: 20px;
+    vertical-align: -1px;
   }}
   .sym-dot {{
-    font-size: 16px;
+    font-size: 19px;
+    vertical-align: 1px;
   }}
   .updated {{
     font-size: 16px;
