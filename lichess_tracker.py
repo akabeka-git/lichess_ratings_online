@@ -226,6 +226,7 @@ def fetch_player_data(username):
         rating = classical.get("rating", 0)
         provisional = classical.get("prov", False)
         rd = classical.get("rd", 0)
+        prog = classical.get("prog", 0)
     except Exception as e:
         print(f"  Fehler bei {username}: {e}", file=sys.stderr)
         return {"name": username, "rating": 0, "diff": 0, "error": True}
@@ -236,7 +237,7 @@ def fetch_player_data(username):
         print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
         diff = 0
     h2h = fetch_h2h_score(username)
-    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "diff": diff, "h2h": h2h, "error": False}
+    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
 def generate_html(players_data, color_stats=None):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
@@ -326,8 +327,14 @@ def generate_html(players_data, color_stats=None):
                 warn = "<svg width='14' height='14' viewBox='0 0 24 24' style='vertical-align:-2px;'><path d='M12 2 L23 21 L1 21 Z' fill='#e8a33d'/><text x='12' y='19' font-size='14' font-weight='bold' fill='#1a1a1a' text-anchor='middle'>!</text></svg>&nbsp;" if 100 <= rd_rounded <= 110 else ""
                 rd_str = f"&nbsp;<span style='color:#555555;font-size:18px;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
 
-        arrow = p.get("pos_arrow", "")
-        arrow_html = f"&nbsp;<span style='color:#555555;font-size:14px;'>{arrow}</span>" if arrow else ""
+        prog = p.get("prog", 0)
+        if prog > 0:
+            prog_symbol = "&#9650;"
+        elif prog < 0:
+            prog_symbol = "&#9660;"
+        else:
+            prog_symbol = "&#9679;"
+        arrow_html = f"&nbsp;<span style='color:#888888;font-size:20px;'>{prog_symbol}</span>"
 
         rows += (
             f"      <tr>\n"
@@ -440,50 +447,9 @@ def main():
                 cache[key] = {"diff": p["diff"], "last_played": today_str}
             elif key in cache:
                 p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
-
-    players_data.sort(key=lambda p: p["rating"], reverse=True)
-
-    # Täglichen Positionssnapshot speichern
-    snapshots = cache.get("_snapshots", {})
-    snapshots[today_str] = {p["name"].lower(): i+1 for i, p in enumerate(players_data) if not p["error"]}
-    # Snapshots älter als 21 Tage löschen
-    cutoff = (date.today() - __import__("datetime").timedelta(days=21)).isoformat()
-    snapshots = {d: v for d, v in snapshots.items() if d >= cutoff}
-    cache["_snapshots"] = snapshots
     save_cache(cache)
 
-    # Positionstrend per linearer Regression über letzte 21 Tage
-    from statistics import linear_regression
-    for i, p in enumerate(players_data):
-        if p["error"]:
-            p["pos_arrow"] = ""
-            continue
-        key = p["name"].lower()
-        points = []
-        for d, snap in sorted(snapshots.items()):
-            if key in snap:
-                days_ago = (date.today() - date.fromisoformat(d)).days
-                points.append((days_ago, snap[key]))
-        if len(points) < 3:
-            p["pos_arrow"] = ""
-            continue
-        xs = [pt[0] for pt in points]
-        ys = [pt[1] for pt in points]
-        try:
-            slope, _ = linear_regression(xs, ys)
-            # slope negativ = Position verbessert (kleinere Zahl = besser)
-            if slope <= -0.6:
-                p["pos_arrow"] = "↑↑"
-            elif slope <= -0.3:
-                p["pos_arrow"] = "↑"
-            elif slope >= 0.6:
-                p["pos_arrow"] = "↓↓"
-            elif slope >= 0.3:
-                p["pos_arrow"] = "↓"
-            else:
-                p["pos_arrow"] = ""
-        except Exception:
-            p["pos_arrow"] = ""
+    players_data.sort(key=lambda p: p["rating"], reverse=True)
 
     print("  Rufe Farbstatistiken ab ...")
     color_stats = fetch_color_stats()
