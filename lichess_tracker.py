@@ -181,28 +181,6 @@ def fetch_h2h_score(username):
         return str(int(n)) if n == int(n) else str(n)
     return (fmt(my_score), fmt(opp_score))
 
-BLOG_URL = "https://lichess.org/@/panic-pawn/blog/siegbert-tarrasch-das-schachspiel/AKMD2L66"
-
-def fetch_blog_stats():
-    import re
-    try:
-        req = urllib.request.Request(BLOG_URL, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            html = resp.read().decode("utf-8", errors="ignore")
-        views_match = re.search(r'([\d][,.\s\d]*\d|\d)\s*views', html)
-        views = views_match.group(1).strip().replace(",", "").replace(".", "").replace(" ", "") if views_match else None
-        likes_match = re.search(r'(\d+)\s*(?:&#[^;]+;)?\s*[\d,]+\s*views', html)
-        if not likes_match:
-            likes_match = re.search(r'class="[^"]*like[^"]*"[^>]*>\D*(\d+)', html)
-        likes = likes_match.group(1) if likes_match else None
-        print(f"  Blog-Stats: views={views}, likes={likes}")
-        if views is None or likes is None:
-            print(f"  Blog-Debug (erste 500 Zeichen): {html[:500]}", file=sys.stderr)
-        return views, likes
-    except Exception as e:
-        print(f"  Blog-Abruf fehlgeschlagen: {e}", file=sys.stderr)
-        return None, None
-
 def fetch_user_info(username):
     url = f"https://lichess.org/api/user/{username}"
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
@@ -261,7 +239,7 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=None):
+def generate_html(players_data, color_stats=None):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -359,7 +337,7 @@ def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=No
         else:
             prog_symbol = "&#9679;"
             sym_size = "16px"
-        arrow_html = f"&nbsp;<span style='color:#6b6b6b;font-size:{sym_size};'>{prog_symbol}</span>"
+        arrow_html = f"&nbsp;<span style='color:#6b6b6b;font-size:{sym_size};font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>"
 
         rows += (
             f"      <tr>\n"
@@ -375,11 +353,7 @@ def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=No
         w, b, days, hours, minutes, wins, draws, losses = color_stats
         total = w + b
         color_html = f"""  <div style="margin-top:2em;font-size:19px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br><br>weiss <span style="color:#ffffff;">{w}</span> – schwarz <span style="color:#ffffff;">{b}</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br><br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
-"""
-        if blog_views and blog_likes:
-            color_html += f"""  <div style="margin-top:1em;font-size:19px;color:#555555;text-align:center;">&#128269;&nbsp;{blog_views}&nbsp;&nbsp;&#10084;&#65039;&nbsp;{blog_likes}</div>
-"""
-        color_html += """  <div style="margin-bottom:1.5em;"></div>
+  <div style="margin-bottom:1.5em;"></div>
 """
 
     html = f"""<!DOCTYPE html>
@@ -401,15 +375,22 @@ def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=No
     align-items: flex-start;
     padding: 4rem 0 1.5rem 0;
   }}
+  html, body {{
+    overflow-x: hidden;
+    max-width: 100%;
+    touch-action: pan-y;
+  }}
   .wrapper {{
     display: inline-block;
     text-align: left;
+    max-width: 100vw;
   }}
   h1 {{
     font-size: 19px;
     font-weight: normal;
     color: #dddddd;
     margin-bottom: 0;
+    white-space: nowrap;
   }}
   table {{
     border-collapse: collapse;
@@ -422,23 +403,35 @@ def generate_html(players_data, color_stats=None, blog_views=None, blog_likes=No
   .updated {{
     font-size: 16px;
     color: #dddddd;
+    white-space: nowrap;
   }}
   @media (max-width: 600px) {{
     body {{
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 2rem 0;
+      padding: 1.5rem 0.5rem;
     }}
     .wrapper {{
-      transform: scale(0.8);
-      transform-origin: top center;
+      transform: none;
+      max-width: calc(100vw - 1rem);
+      overflow-x: hidden;
+    }}
+    h1 {{
+      font-size: 14px;
+    }}
+    .updated {{
+      font-size: 11px;
+    }}
+    td {{
+      font-size: 14px;
+      padding: 0.1rem 0.8rem 0.1rem 0;
     }}
   }}
 </style>
 </head>
 <body>
 <div class="wrapper">
-  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;width:100%;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;width:100%;gap:1rem;">
     <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
     <div class="updated">{now_str}</div>
   </div>
@@ -483,11 +476,8 @@ def main():
     print("  Rufe Farbstatistiken ab ...")
     color_stats = fetch_color_stats()
 
-    print("  Rufe Blog-Stats ab ...")
-    blog_views, blog_likes = fetch_blog_stats()
-
     os.makedirs(PUBLIC_DIR, exist_ok=True)
-    html = generate_html(players_data, color_stats, blog_views, blog_likes)
+    html = generate_html(players_data, color_stats)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)
 
