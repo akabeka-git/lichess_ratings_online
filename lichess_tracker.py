@@ -323,8 +323,8 @@ def generate_html(players_data, color_stats=None):
             rd_val = p.get("rd")
             if rd_val:
                 rd_rounded = round(rd_val)
-                warn = "&#9888;&nbsp;" if 100 <= rd_rounded <= 110 else ""
-                rd_str = f"&nbsp;&nbsp;<span style='color:#555555;font-size:18px;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
+                warn = "<svg width='14' height='14' viewBox='0 0 24 24' style='vertical-align:-2px;'><path d='M12 2 L23 21 L1 21 Z' fill='#e8a33d'/><text x='12' y='19' font-size='14' font-weight='bold' fill='#1a1a1a' text-anchor='middle'>!</text></svg>&nbsp;" if 100 <= rd_rounded <= 110 else ""
+                rd_str = f"&nbsp;<span style='color:#555555;font-size:18px;font-weight:normal;font-style:normal;'>{warn}{rd_rounded}</span>"
 
         arrow = p.get("pos_arrow", "")
         arrow_html = f"&nbsp;<span style='color:#555555;font-size:14px;'>{arrow}</span>" if arrow else ""
