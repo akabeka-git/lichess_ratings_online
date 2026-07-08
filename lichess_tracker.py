@@ -334,7 +334,7 @@ def generate_html(players_data, color_stats=None):
             prog_symbol = "&#9660;"
         else:
             prog_symbol = "&#9679;"
-        arrow_html = f"&nbsp;<span style='color:#888888;font-size:20px;'>{prog_symbol}</span>"
+        arrow_html = f"&nbsp;<span style='color:#858585;font-size:20px;display:inline-block;text-align:right;min-width:1.2em;padding-right:2px;'>{prog_symbol}</span>"
 
         rows += (
             f"      <tr>\n"
