@@ -407,7 +407,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
     text-overflow: ellipsis;
   }}
   .rownum {{
-    padding-right: 0.5rem;
+    padding-right: 1.1rem;
   }}
   .sym-tri {{
     font-size: 20px;
@@ -444,7 +444,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
       padding: 0.1rem 1rem 0.1rem 0;
     }}
     .rownum {{
-      padding-right: 0.3rem !important;
+      padding-right: 0.9rem !important;
     }}
     .sym-tri {{
       font-size: 17px;
