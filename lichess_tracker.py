@@ -396,14 +396,18 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
   }}
   table {{
     border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
   }}
   td {{
-    padding: 0.1rem 2.5rem 0.1rem 0;
+    padding: 0.1rem 1rem 0.1rem 0;
     font-size: 23px;
     font-weight: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }}
   .rownum {{
-    padding-right: 2rem;
+    padding-right: 0.5rem;
   }}
   .sym-tri {{
     font-size: 20px;
@@ -440,7 +444,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
       padding: 0.1rem 1rem 0.1rem 0;
     }}
     .rownum {{
-      padding-right: 0.8rem !important;
+      padding-right: 0.3rem !important;
     }}
     .sym-tri {{
       font-size: 17px;
@@ -465,6 +469,12 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
     </div>
   </div>
   <table>
+    <colgroup>
+      <col style="width:8%">
+      <col style="width:52%">
+      <col style="width:15%">
+      <col style="width:25%">
+    </colgroup>
     <tbody>
 {rows}    </tbody>
   </table>
