@@ -385,7 +385,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
     display: inline-block;
     text-align: left;
     max-width: 100vw;
-    min-width: 580px;
+    width: 700px;
   }}
   h1 {{
     font-size: 19px;
@@ -426,8 +426,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
     }}
     .wrapper {{
       transform: none;
-      max-width: calc(100vw - 1rem);
-      min-width: calc(100vw - 1rem);
+      width: calc(100vw - 1rem);
       overflow-x: hidden;
     }}
     h1 {{
