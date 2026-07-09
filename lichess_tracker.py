@@ -394,6 +394,12 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
     margin-bottom: 0;
     white-space: nowrap;
   }}
+  @media (min-width: 601px) {{
+    .wrapper {{
+      padding-left: 1em;
+      padding-right: 1em;
+    }}
+  }}
   table {{
     border-collapse: collapse;
     table-layout: fixed;
