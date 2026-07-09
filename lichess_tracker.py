@@ -15,6 +15,7 @@ SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PLAYERS_FILE = os.path.join(SCRIPT_DIR, "spieler.txt")
 PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "docs")
 OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
+STABIL_FILE  = os.path.join(PUBLIC_DIR, "stabil.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
@@ -239,7 +240,7 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data, color_stats=None):
+def generate_html(players_data, color_stats=None, page_variant="alle"):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -453,7 +454,14 @@ def generate_html(players_data, color_stats=None):
 <div class="wrapper">
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;width:100%;gap:1rem;">
     <h1><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</h1>
-    <div class="updated">{now_str}</div>
+    <div style="text-align:right;">
+      <div class="updated">{now_str}</div>
+      <div style="font-size:12px;margin-top:2px;">
+        <a href="index.html" style="color:{'#dddddd' if page_variant=='alle' else '#555555'};text-decoration:none;">alle</a>
+        <span style="color:#555555;"> · </span>
+        <a href="stabil.html" style="color:{'#dddddd' if page_variant=='stabil' else '#555555'};text-decoration:none;">stabil</a>
+      </div>
+    </div>
   </div>
   <table>
     <tbody>
@@ -497,11 +505,17 @@ def main():
     color_stats = fetch_color_stats()
 
     os.makedirs(PUBLIC_DIR, exist_ok=True)
-    html = generate_html(players_data, color_stats)
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write(html)
 
+    html_alle = generate_html(players_data, color_stats, page_variant="alle")
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(html_alle)
     print(f"\n  HTML gespeichert: {OUTPUT_FILE}")
+
+    stable_players = [p for p in players_data if p["error"] or not p.get("provisional")]
+    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil")
+    with open(STABIL_FILE, "w", encoding="utf-8") as f:
+        f.write(html_stabil)
+    print(f"  HTML gespeichert: {STABIL_FILE}")
 
 if __name__ == "__main__":
     main()
