@@ -399,22 +399,26 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         new_positions[player_key] = row_num
         old_pos = old_positions.get(player_key)
         if old_pos is None:
-            pos_change_str = "&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>n</span>"
+            pos_change_str = "<span style='color:#6b6b6b;font-size:0.78em;'>n</span>"
         else:
             pos_delta = old_pos - row_num  # positiv = aufgestiegen
             if pos_delta == 0:
                 pos_change_str = ""
             elif pos_delta > 0:
-                pos_change_str = f"&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>+{pos_delta}</span>"
+                pos_change_str = f"<span style='color:#6b6b6b;font-size:0.78em;'>+{pos_delta}</span>"
             else:
-                pos_change_str = f"&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>{pos_delta}</span>"
+                pos_change_str = f"<span style='color:#6b6b6b;font-size:0.78em;'>{pos_delta}</span>"
 
         rows += (
             f"      <tr>\n"
             f"        <td class=\"rownum\" style=\"color:#555555;text-align:right;white-space:nowrap;\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color};white-space:nowrap;\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{rd_str}{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}white-space:nowrap;\">{diff_str}</td>\n"
-            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}white-space:nowrap;\">{arrow_html}{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{pos_change_str}</td>\n"
+            f"        <td style=\"color:{rating_color};{rating_style}white-space:nowrap;padding-top:0;padding-bottom:0;\">"
+            f"<span style='display:flex;align-items:baseline;width:100%;'>"
+            f"<span style='flex:1;text-align:center;'>{arrow_html}{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}</span>"
+            f"<span style='width:2.4em;text-align:right;flex-shrink:0;'>{pos_change_str}</span>"
+            f"</span></td>\n"
             f"      </tr>\n"
         )
 
