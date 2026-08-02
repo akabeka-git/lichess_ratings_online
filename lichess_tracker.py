@@ -16,6 +16,7 @@ PLAYERS_FILE = os.path.join(SCRIPT_DIR, "spieler.txt")
 PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "docs")
 OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 STABIL_FILE  = os.path.join(PUBLIC_DIR, "stabil.html")
+NOBOTS_FILE  = os.path.join(PUBLIC_DIR, "nobots.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
@@ -480,6 +481,8 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
         <a href="index.html" style="color:{'#dddddd' if page_variant=='alle' else '#555555'};text-decoration:none;">alle</a>
         <span style="color:#555555;"> · </span>
         <a href="stabil.html" style="color:{'#dddddd' if page_variant=='stabil' else '#555555'};text-decoration:none;">stabil</a>
+        <span style="color:#555555;"> · </span>
+        <a href="nobots.html" style="color:{'#dddddd' if page_variant=='nobots' else '#555555'};text-decoration:none;">nobots</a>
       </div>
     </div>
   </div>
@@ -542,6 +545,12 @@ def main():
     with open(STABIL_FILE, "w", encoding="utf-8") as f:
         f.write(html_stabil)
     print(f"  HTML gespeichert: {STABIL_FILE}")
+
+    nobots_players = [p for p in stable_players if p["error"] or not p["name"].lower().startswith("maia")]
+    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots")
+    with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
+        f.write(html_nobots)
+    print(f"  HTML gespeichert: {NOBOTS_FILE}")
 
 if __name__ == "__main__":
     main()

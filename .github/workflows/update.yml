@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/stabil.html werte.json
+          git add docs/index.html docs/stabil.html docs/nobots.html werte.json
           git diff --staged --quiet \
             && echo "Keine Änderungen." \
             || (git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git pull --rebase origin main && git push)
