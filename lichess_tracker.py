@@ -97,14 +97,26 @@ H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
 COLOR_STATS_PLAYERS = ["pion-panique", "tric-k_17", "botfather-slay"]
 SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
 
-def fetch_color_stats():
-    total_white, total_black, total_seconds = 0, 0, 0
-    total_wins, total_losses, total_draws = 0, 0, 0
-    white_wins, black_wins = 0, 0
+def fetch_color_stats(cache):
+    cs = cache.get("_color_stats", {})
+    since = cs.get("since_ms", SINCE_2026)
+
+    total_white   = cs.get("total_white", 0)
+    total_black   = cs.get("total_black", 0)
+    total_wins    = cs.get("total_wins", 0)
+    total_draws   = cs.get("total_draws", 0)
+    total_losses  = cs.get("total_losses", 0)
+    white_wins    = cs.get("white_wins", 0)
+    black_wins    = cs.get("black_wins", 0)
+    total_seconds = cs.get("total_seconds", 0)
+
+    max_created = since
+    new_games_found = 0
+
     for username in COLOR_STATS_PLAYERS:
         url = (
             f"https://lichess.org/api/games/user/{username}"
-            f"?since={SINCE_2026}&moves=false&evals=false&opening=false"
+            f"?since={since}&moves=false&evals=false&opening=false"
         )
         req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
         try:
@@ -114,9 +126,15 @@ def fetch_color_stats():
                     if not line:
                         continue
                     game = json.loads(line.decode())
+                    created = game.get("createdAt", 0)
+                    # Bereits verarbeitete Partien überspringen (since ist inklusiv)
+                    if created <= since:
+                        continue
+                    new_games_found += 1
+                    if created > max_created:
+                        max_created = created
                     players = game.get("players", {})
                     white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
-                    black_id = players.get("black", {}).get("user", {}).get("id", "").lower()
                     is_white = white_id == username.lower()
                     if is_white:
                         total_white += 1
@@ -137,13 +155,27 @@ def fetch_color_stats():
                             total_losses += 1
                     else:
                         total_draws += 1
-                    created = game.get("createdAt", 0)
                     last_move = game.get("lastMoveAt", 0)
                     if created and last_move:
                         total_seconds += (last_move - created) / 1000
         except Exception as e:
             print(f"  Farbstatistik-Fehler bei {username}: {e}", file=sys.stderr)
         time.sleep(2)
+
+    print(f"  Farbstatistik: {new_games_found} neue Partie(n) seit letztem Run.")
+
+    cache["_color_stats"] = {
+        "since_ms": max_created + 1 if new_games_found else since,
+        "total_white": total_white,
+        "total_black": total_black,
+        "total_wins": total_wins,
+        "total_draws": total_draws,
+        "total_losses": total_losses,
+        "white_wins": white_wins,
+        "black_wins": black_wins,
+        "total_seconds": total_seconds,
+    }
+
     days    = int(total_seconds // 86400)
     hours   = int((total_seconds % 86400) // 3600)
     minutes = int((total_seconds % 3600) // 60)
@@ -526,12 +558,12 @@ def main():
                 cache[key] = {"diff": p["diff"], "last_played": today_str}
             elif key in cache:
                 p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
-    save_cache(cache)
 
     players_data.sort(key=lambda p: p["rating"], reverse=True)
 
     print("  Rufe Farbstatistiken ab ...")
-    color_stats = fetch_color_stats()
+    color_stats = fetch_color_stats(cache)
+    save_cache(cache)
 
     os.makedirs(PUBLIC_DIR, exist_ok=True)
 
