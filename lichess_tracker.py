@@ -231,6 +231,10 @@ def fetch_user_info(username):
         return json.loads(resp.read().decode())
 
 def fetch_todays_classic_games(username):
+    import zoneinfo
+    berlin = zoneinfo.ZoneInfo("Europe/Berlin")
+    today_berlin = datetime.now(berlin).date()
+
     url = (
         f"https://lichess.org/api/games/user/{username}"
         f"?max=100&moves=false&evals=false&opening=false"
@@ -243,7 +247,7 @@ def fetch_todays_classic_games(username):
             if line:
                 game = json.loads(line.decode())
                 ts = game.get("lastMoveAt", game.get("createdAt", 0)) / 1000
-                is_today = datetime.fromtimestamp(ts).date() == date.today()
+                is_today = datetime.fromtimestamp(ts, tz=berlin).date() == today_berlin
                 is_classical = game.get("perf") == "classical"
                 if is_today and is_classical:
                     games.append(game)
@@ -307,7 +311,9 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
             entry = cache[key]
             last_played = entry["last_played"] if isinstance(entry, dict) else None
             if last_played:
-                days_ago = (date.today() - date.fromisoformat(last_played)).days
+                import zoneinfo as _zi
+                today_berlin_date = datetime.now(_zi.ZoneInfo("Europe/Berlin")).date()
+                days_ago = (today_berlin_date - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
         if played_recently:
@@ -550,7 +556,8 @@ def main():
 
     # Cache laden und Werte mergen
     cache = load_cache()
-    today_str = date.today().isoformat()
+    import zoneinfo
+    today_str = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin")).date().isoformat()
     for p in players_data:
         if not p["error"]:
             key = p["name"].lower()
