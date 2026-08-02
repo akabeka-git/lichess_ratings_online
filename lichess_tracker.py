@@ -309,8 +309,6 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         is_highlight = p["name"].lower() in {h.lower() for h in HIGHLIGHT_PLAYERS}
 
         # Gelb wenn in letzten 7 Tagen gespielt
-        from datetime import timedelta
-        cache = load_cache()
         key = p["name"].lower()
         played_recently = False
         if key in cache:
