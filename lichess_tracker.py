@@ -286,11 +286,17 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data, color_stats=None, page_variant="alle"):
+def generate_html(players_data, color_stats=None, page_variant="alle", cache=None):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
     now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
+
+    if cache is None:
+        cache = {}
+    pos_cache_key = f"_pos_{page_variant}"
+    old_positions = cache.get(pos_cache_key, {})
+    new_positions = {}
 
     rows = ""
     prev_hundred = None
@@ -386,16 +392,33 @@ def generate_html(players_data, color_stats=None, page_variant="alle"):
         else:
             prog_symbol = "&#9679;"
             sym_class = "sym-dot"
-        arrow_html = f"&nbsp;<span class='{sym_class}' style='color:#6b6b6b;font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>"
+        arrow_html = f"<span class='{sym_class}' style='color:#6b6b6b;font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>&nbsp;"
+
+        # Positionsänderung seit dem letzten Abruf (pro Seitenvariante getrennt)
+        player_key = p["name"].lower()
+        new_positions[player_key] = row_num
+        old_pos = old_positions.get(player_key)
+        if old_pos is None:
+            pos_change_str = "&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>n</span>"
+        else:
+            pos_delta = old_pos - row_num  # positiv = aufgestiegen
+            if pos_delta == 0:
+                pos_change_str = ""
+            elif pos_delta > 0:
+                pos_change_str = f"&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>+{pos_delta}</span>"
+            else:
+                pos_change_str = f"&nbsp;<span style='color:#6b6b6b;font-size:0.78em;'>{pos_delta}</span>"
 
         rows += (
             f"      <tr>\n"
             f"        <td class=\"rownum\" style=\"color:#555555;text-align:right;white-space:nowrap;\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color};white-space:nowrap;\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{rd_str}{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}white-space:nowrap;\">{diff_str}</td>\n"
-            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}white-space:nowrap;\">{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{arrow_html}</td>\n"
+            f"        <td style=\"color:{rating_color};text-align:right;{rating_style}white-space:nowrap;\">{arrow_html}{'(' + str(p['rating']) + ')' if p.get('provisional') else p['rating']}{pos_change_str}</td>\n"
             f"      </tr>\n"
         )
+
+    cache[pos_cache_key] = new_positions
 
     color_html = ""
     if color_stats:
@@ -574,22 +597,24 @@ def main():
 
     os.makedirs(PUBLIC_DIR, exist_ok=True)
 
-    html_alle = generate_html(players_data, color_stats, page_variant="alle")
+    html_alle = generate_html(players_data, color_stats, page_variant="alle", cache=cache)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html_alle)
     print(f"\n  HTML gespeichert: {OUTPUT_FILE}")
 
     stable_players = [p for p in players_data if p["error"] or not p.get("provisional")]
-    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil")
+    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil", cache=cache)
     with open(STABIL_FILE, "w", encoding="utf-8") as f:
         f.write(html_stabil)
     print(f"  HTML gespeichert: {STABIL_FILE}")
 
     nobots_players = [p for p in stable_players if p["error"] or not p["name"].lower().startswith("maia")]
-    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots")
+    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots", cache=cache)
     with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
         f.write(html_nobots)
     print(f"  HTML gespeichert: {NOBOTS_FILE}")
+
+    save_cache(cache)
 
 if __name__ == "__main__":
     main()
