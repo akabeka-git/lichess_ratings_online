@@ -286,7 +286,9 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data, color_stats=None, page_variant="alle"):
+def generate_html(players_data, color_stats=None, page_variant="alle", cache=None):
+    if cache is None:
+        cache = {}
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -609,19 +611,19 @@ def main():
 
     os.makedirs(PUBLIC_DIR, exist_ok=True)
 
-    html_alle = generate_html(players_data, color_stats, page_variant="alle")
+    html_alle = generate_html(players_data, color_stats, page_variant="alle", cache=cache)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html_alle)
     print(f"\n  HTML gespeichert: {OUTPUT_FILE}")
 
     stable_players = [p for p in players_data if p["error"] or not p.get("provisional")]
-    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil")
+    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil", cache=cache)
     with open(STABIL_FILE, "w", encoding="utf-8") as f:
         f.write(html_stabil)
     print(f"  HTML gespeichert: {STABIL_FILE}")
 
     nobots_players = [p for p in stable_players if p["error"] or not p["name"].lower().startswith("maia")]
-    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots")
+    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots", cache=cache)
     with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
         f.write(html_nobots)
     print(f"  HTML gespeichert: {NOBOTS_FILE}")
