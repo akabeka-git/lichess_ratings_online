@@ -395,13 +395,13 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
             f"        <td class=\"rownum\" style=\"color:#555555;text-align:right;white-space:nowrap;\">{row_num}</td>\n"
             f"        <td style=\"color:{text_color};white-space:nowrap;\"><a href='https://lichess.org/@/{p['name']}/all' target='_blank' style='color:inherit;text-decoration:none;cursor:pointer;{name_style}'>{display_name}</a>{rd_str}{h2h_str}</td>\n"
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}white-space:nowrap;\">{diff_str}</td>\n"
-            f"        <td style=\"color:{rating_color};{rating_style}white-space:nowrap;padding-top:0;padding-bottom:0;\">"
+            f"        <td style=\"color:{rating_color};{rating_style}white-space:nowrap;padding-top:0;padding-bottom:0;overflow:visible;\">"
             f"<span style='display:flex;align-items:baseline;width:100%;'>"
             f"<span style='flex:1;text-align:center;font-variant-numeric:tabular-nums;'>{arrow_html}"
             + (f"({p['rating']})" if p.get('provisional')
                else f"<span style='visibility:hidden;'>(</span>{p['rating']}<span style='visibility:hidden;'>)</span>")
             + f"</span>"
-            f"<span class='poschg' data-name='{player_key}' style='width:2.4em;text-align:right;flex-shrink:0;'></span>"
+            f"<span class='poschg pcbox' data-name='{player_key}' style='text-align:right;flex-shrink:0;'></span>"
             f"</span></td>\n"
             f"      </tr>\n"
         )
@@ -480,6 +480,10 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     font-size: 19px;
     vertical-align: 1px;
   }}
+  .pcbox {{
+    width: 2.4em;
+    overflow: visible;
+  }}
   .updated {{
     font-size: 16px;
     color: #dddddd;
@@ -514,6 +518,9 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     }}
     .sym-dot {{
       font-size: 13.6px;
+    }}
+    .pcbox {{
+      width: 1.7em;
     }}
   }}
 </style>
