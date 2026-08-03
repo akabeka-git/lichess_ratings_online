@@ -286,17 +286,11 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
-def generate_html(players_data, color_stats=None, page_variant="alle", cache=None):
+def generate_html(players_data, color_stats=None, page_variant="alle"):
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     import zoneinfo
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
     now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
-
-    if cache is None:
-        cache = {}
-    pos_cache_key = f"_pos_{page_variant}"
-    old_positions = cache.get(pos_cache_key, {})
-    new_positions = {}
 
     rows = ""
     prev_hundred = None
@@ -392,20 +386,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
             sym_class = "sym-dot"
         arrow_html = f"<span class='{sym_class}' style='color:#6b6b6b;font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>&nbsp;"
 
-        # Positionsänderung seit dem letzten Abruf (pro Seitenvariante getrennt)
         player_key = p["name"].lower()
-        new_positions[player_key] = row_num
-        old_pos = old_positions.get(player_key)
-        if old_pos is None:
-            pos_change_str = "<span style='color:#6b6b6b;font-size:0.78em;'>n</span>"
-        else:
-            pos_delta = old_pos - row_num  # positiv = aufgestiegen
-            if pos_delta == 0:
-                pos_change_str = ""
-            elif pos_delta > 0:
-                pos_change_str = f"<span style='color:#6b6b6b;font-size:0.78em;'>+{pos_delta}</span>"
-            else:
-                pos_change_str = f"<span style='color:#6b6b6b;font-size:0.78em;'>{pos_delta}</span>"
 
         rows += (
             f"      <tr>\n"
@@ -418,12 +399,10 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
             + (f"({p['rating']})" if p.get('provisional')
                else f"<span style='visibility:hidden;'>(</span>{p['rating']}<span style='visibility:hidden;'>)</span>")
             + f"</span>"
-            f"<span style='width:2.4em;text-align:right;flex-shrink:0;'>{pos_change_str}</span>"
+            f"<span class='poschg' data-name='{player_key}' style='width:2.4em;text-align:right;flex-shrink:0;'></span>"
             f"</span></td>\n"
             f"      </tr>\n"
         )
-
-    cache[pos_cache_key] = new_positions
 
     color_html = ""
     if color_stats:
@@ -563,6 +542,34 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 {rows}    </tbody>
   </table>
 {color_html}</div>
+<script>
+(function() {{
+  var storageKey = "lichess_pos_{page_variant}";
+  var spans = document.querySelectorAll('.poschg');
+  var current = {{}};
+  spans.forEach(function(el, idx) {{
+    current[el.dataset.name] = idx + 1;
+  }});
+  var prevRaw = null;
+  try {{ prevRaw = localStorage.getItem(storageKey); }} catch (e) {{}}
+  var prev = prevRaw ? JSON.parse(prevRaw) : {{}};
+  spans.forEach(function(el) {{
+    var name = el.dataset.name;
+    var newPos = current[name];
+    if (!(name in prev)) {{
+      el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>n</span>";
+    }} else {{
+      var delta = prev[name] - newPos;
+      if (delta > 0) {{
+        el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>+" + delta + "</span>";
+      }} else if (delta < 0) {{
+        el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>" + delta + "</span>";
+      }}
+    }}
+  }});
+  try {{ localStorage.setItem(storageKey, JSON.stringify(current)); }} catch (e) {{}}
+}})();
+</script>
 </body>
 </html>"""
     return html
@@ -602,24 +609,23 @@ def main():
 
     os.makedirs(PUBLIC_DIR, exist_ok=True)
 
-    html_alle = generate_html(players_data, color_stats, page_variant="alle", cache=cache)
+    html_alle = generate_html(players_data, color_stats, page_variant="alle")
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html_alle)
     print(f"\n  HTML gespeichert: {OUTPUT_FILE}")
 
     stable_players = [p for p in players_data if p["error"] or not p.get("provisional")]
-    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil", cache=cache)
+    html_stabil = generate_html(stable_players, color_stats, page_variant="stabil")
     with open(STABIL_FILE, "w", encoding="utf-8") as f:
         f.write(html_stabil)
     print(f"  HTML gespeichert: {STABIL_FILE}")
 
     nobots_players = [p for p in stable_players if p["error"] or not p["name"].lower().startswith("maia")]
-    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots", cache=cache)
+    html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots")
     with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
         f.write(html_nobots)
     print(f"  HTML gespeichert: {NOBOTS_FILE}")
 
-    save_cache(cache)
 
 if __name__ == "__main__":
     main()
