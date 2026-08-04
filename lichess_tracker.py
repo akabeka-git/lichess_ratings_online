@@ -576,12 +576,24 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
   spans.forEach(function(el) {{
     var name = el.dataset.name;
     var newPos = currentPositions[name];
-    var entry = stored[name];
+    var raw = stored[name];
+    // Migration: altes Format war eine reine Zahl statt {{pos, delta}}
+    var entry = (raw && typeof raw === "object" && "pos" in raw) ? raw : null;
+    var oldFlatPos = (typeof raw === "number") ? raw : null;
     var displayDelta;
-    if (!entry) {{
+    if (!entry && oldFlatPos === null) {{
       // Neu in der Liste
       displayDelta = "n";
       updated[name] = {{ pos: newPos, delta: "n" }};
+    }} else if (!entry && oldFlatPos !== null) {{
+      // Migration von altem Format: einmalig vergleichen, dann neues Format anlegen
+      if (oldFlatPos !== newPos) {{
+        var mdelta = oldFlatPos - newPos;
+        displayDelta = mdelta > 0 ? ("+" + mdelta) : String(mdelta);
+      }} else {{
+        displayDelta = null;
+      }}
+      updated[name] = {{ pos: newPos, delta: displayDelta || "" }};
     }} else if (entry.pos !== newPos) {{
       // Position hat sich seit dem letzten Mal veraendert -> neuer Wert
       var delta = entry.pos - newPos;
