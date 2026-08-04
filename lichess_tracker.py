@@ -380,15 +380,15 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         if prog > 0:
             prog_symbol = "&#9650;"
             sym_class = "sym-tri"
-            sym_color = "#34a05a"
+            sym_color = "#2e8e50"
         elif prog < 0:
             prog_symbol = "&#9660;"
             sym_class = "sym-tri"
-            sym_color = "#ad3a3a"
+            sym_color = "#993333"
         else:
             prog_symbol = "&#9679;"
             sym_class = "sym-dot"
-            sym_color = "#5b5b5b"
+            sym_color = "#505050"
         arrow_html = f"<span class='{sym_class}' style='color:{sym_color};font-style:normal;font-weight:normal;display:inline-block;'>{prog_symbol}</span>&nbsp;"
 
         player_key = p["name"].lower()
