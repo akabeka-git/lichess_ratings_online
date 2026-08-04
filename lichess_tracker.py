@@ -565,28 +565,38 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 (function() {{
   var storageKey = "lichess_pos_{page_variant}";
   var spans = document.querySelectorAll('.poschg');
-  var current = {{}};
+  var currentPositions = {{}};
   spans.forEach(function(el, idx) {{
-    current[el.dataset.name] = idx + 1;
+    currentPositions[el.dataset.name] = idx + 1;
   }});
-  var prevRaw = null;
-  try {{ prevRaw = localStorage.getItem(storageKey); }} catch (e) {{}}
-  var prev = prevRaw ? JSON.parse(prevRaw) : {{}};
+  var storedRaw = null;
+  try {{ storedRaw = localStorage.getItem(storageKey); }} catch (e) {{}}
+  var stored = storedRaw ? JSON.parse(storedRaw) : {{}};
+  var updated = {{}};
   spans.forEach(function(el) {{
     var name = el.dataset.name;
-    var newPos = current[name];
-    if (!(name in prev)) {{
-      el.innerHTML = "<span class='pcval'>n</span>";
+    var newPos = currentPositions[name];
+    var entry = stored[name];
+    var displayDelta;
+    if (!entry) {{
+      // Neu in der Liste
+      displayDelta = "n";
+      updated[name] = {{ pos: newPos, delta: "n" }};
+    }} else if (entry.pos !== newPos) {{
+      // Position hat sich seit dem letzten Mal veraendert -> neuer Wert
+      var delta = entry.pos - newPos;
+      displayDelta = delta > 0 ? ("+" + delta) : String(delta);
+      updated[name] = {{ pos: newPos, delta: displayDelta }};
     }} else {{
-      var delta = prev[name] - newPos;
-      if (delta > 0) {{
-        el.innerHTML = "<span class='pcval'>+" + delta + "</span>";
-      }} else if (delta < 0) {{
-        el.innerHTML = "<span class='pcval'>" + delta + "</span>";
-      }}
+      // Keine Veraenderung -> letzten bekannten Wert stehen lassen
+      displayDelta = entry.delta;
+      updated[name] = {{ pos: newPos, delta: entry.delta }};
+    }}
+    if (displayDelta) {{
+      el.innerHTML = "<span class='pcval'>" + displayDelta + "</span>";
     }}
   }});
-  try {{ localStorage.setItem(storageKey, JSON.stringify(current)); }} catch (e) {{}}
+  try {{ localStorage.setItem(storageKey, JSON.stringify(updated)); }} catch (e) {{}}
 }})();
 </script>
 </body>
