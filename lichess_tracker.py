@@ -484,6 +484,10 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     width: 2.4em;
     overflow: visible;
   }}
+  .pcval {{
+    color: #6b6b6b;
+    font-size: 0.78em;
+  }}
   .updated {{
     font-size: 16px;
     color: #dddddd;
@@ -520,7 +524,10 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
       font-size: 13.6px;
     }}
     .pcbox {{
-      width: 1.7em;
+      width: 1.2em;
+    }}
+    .pcval {{
+      font-size: 0.6em;
     }}
   }}
 </style>
@@ -566,13 +573,13 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     var name = el.dataset.name;
     var newPos = current[name];
     if (!(name in prev)) {{
-      el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>n</span>";
+      el.innerHTML = "<span class='pcval'>n</span>";
     }} else {{
       var delta = prev[name] - newPos;
       if (delta > 0) {{
-        el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>+" + delta + "</span>";
+        el.innerHTML = "<span class='pcval'>+" + delta + "</span>";
       }} else if (delta < 0) {{
-        el.innerHTML = "<span style='color:#6b6b6b;font-size:0.78em;'>" + delta + "</span>";
+        el.innerHTML = "<span class='pcval'>" + delta + "</span>";
       }}
     }}
   }});
