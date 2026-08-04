@@ -572,6 +572,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
   var storedRaw = null;
   try {{ storedRaw = localStorage.getItem(storageKey); }} catch (e) {{}}
   var stored = storedRaw ? JSON.parse(storedRaw) : {{}};
+  var isFirstRun = Object.keys(stored).length === 0;
   var updated = {{}};
   spans.forEach(function(el) {{
     var name = el.dataset.name;
@@ -579,12 +580,19 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     var raw = stored[name];
     // Migration: altes Format war eine reine Zahl statt {{pos, delta}}
     var entry = (raw && typeof raw === "object" && "pos" in raw) ? raw : null;
+    if (entry && (typeof entry.pos !== "number" || isNaN(entry.pos) || entry.delta === "NaN")) {{
+      entry = null; // kaputter Wert aus fehlerhaftem Zwischenstand -> verwerfen
+    }}
     var oldFlatPos = (typeof raw === "number") ? raw : null;
     var displayDelta;
-    if (!entry && oldFlatPos === null) {{
-      // Neu in der Liste
-      displayDelta = "n";
-      updated[name] = {{ pos: newPos, delta: "n" }};
+    if (isFirstRun) {{
+      // Allererster Aufruf: Basiswert nur still anlegen, nichts anzeigen
+      displayDelta = null;
+      updated[name] = {{ pos: newPos, delta: "" }};
+    }} else if (!entry && oldFlatPos === null) {{
+      // Echter Neuzugang in der Liste
+      displayDelta = "neu";
+      updated[name] = {{ pos: newPos, delta: "neu" }};
     }} else if (!entry && oldFlatPos !== null) {{
       // Migration von altem Format: einmalig vergleichen, dann neues Format anlegen
       if (oldFlatPos !== newPos) {{
