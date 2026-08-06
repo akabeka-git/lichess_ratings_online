@@ -527,10 +527,10 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
       font-size: 13.6px;
     }}
     .pcbox {{
-      width: 1.2em;
+      width: 0.9em;
     }}
     .pcval {{
-      font-size: 0.6em;
+      font-size: 0.5em;
     }}
   }}
 </style>
