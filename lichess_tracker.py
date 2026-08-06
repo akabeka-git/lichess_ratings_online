@@ -413,7 +413,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     if color_stats:
         w, b, days, hours, minutes, wins, draws, losses, white_pct, black_pct = color_stats
         total = w + b
-        color_html = f"""  <div style="margin-top:2em;font-size:19px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br>weiss <span style="color:#ffffff;">{w}</span> <span style="color:#555555;font-size:0.85em;">({white_pct}%)</span> – schwarz <span style="color:#ffffff;">{b}</span> <span style="color:#555555;font-size:0.85em;">({black_pct}%)</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
+        color_html = f"""  <div style="margin-top:2em;font-size:15px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br>weiss <span style="color:#a6a6a6;">{w}</span> <span style="color:#555555;font-size:0.85em;">({white_pct}%)</span> – schwarz <span style="color:#a6a6a6;">{b}</span> <span style="color:#555555;font-size:0.85em;">({black_pct}%)</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <div style="margin-bottom:1.5em;"></div>
 """
 
@@ -564,6 +564,9 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 <script>
 (function() {{
   var storageKey = "lichess_pos_{page_variant}";
+  var highlightPlayers = {sorted([h.lower() for h in HIGHLIGHT_PLAYERS])};
+  var threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+  var now = Date.now();
   var spans = document.querySelectorAll('.poschg');
   var currentPositions = {{}};
   spans.forEach(function(el, idx) {{
@@ -588,11 +591,11 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     if (isFirstRun) {{
       // Allererster Aufruf: Basiswert nur still anlegen, nichts anzeigen
       displayDelta = null;
-      updated[name] = {{ pos: newPos, delta: "" }};
+      updated[name] = {{ pos: newPos, delta: "", ts: now }};
     }} else if (!entry && oldFlatPos === null) {{
       // Echter Neuzugang in der Liste
       displayDelta = "neu";
-      updated[name] = {{ pos: newPos, delta: "neu" }};
+      updated[name] = {{ pos: newPos, delta: "neu", ts: now }};
     }} else if (!entry && oldFlatPos !== null) {{
       // Migration von altem Format: einmalig vergleichen, dann neues Format anlegen
       if (oldFlatPos !== newPos) {{
@@ -601,19 +604,29 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
       }} else {{
         displayDelta = null;
       }}
-      updated[name] = {{ pos: newPos, delta: displayDelta || "" }};
+      updated[name] = {{ pos: newPos, delta: displayDelta || "", ts: now }};
     }} else if (entry.pos !== newPos) {{
       // Position hat sich seit dem letzten Mal veraendert -> neuer Wert
       var delta = entry.pos - newPos;
       displayDelta = delta > 0 ? ("+" + delta) : String(delta);
-      updated[name] = {{ pos: newPos, delta: displayDelta }};
+      updated[name] = {{ pos: newPos, delta: displayDelta, ts: now }};
     }} else {{
-      // Keine Veraenderung -> letzten bekannten Wert stehen lassen
-      displayDelta = entry.delta;
-      updated[name] = {{ pos: newPos, delta: entry.delta }};
+      // Keine Veraenderung -> pruefen ob abgelaufen (ausser highlight-spieler)
+      var entryTs = entry.ts || now;
+      var isHighlight = highlightPlayers.indexOf(name) !== -1;
+      if (!isHighlight && (now - entryTs) > threeDaysMs) {{
+        displayDelta = null;
+        updated[name] = {{ pos: newPos, delta: "", ts: entryTs }};
+      }} else {{
+        displayDelta = entry.delta;
+        updated[name] = {{ pos: newPos, delta: entry.delta, ts: entryTs }};
+      }}
     }}
     if (displayDelta) {{
-      el.innerHTML = "<span class='pcval'>" + displayDelta + "</span>";
+      var color = "#6b6b6b";
+      if (displayDelta.charAt(0) === "+") {{ color = "#3dbd6a"; }}
+      else if (displayDelta.charAt(0) === "-") {{ color = "#cc4444"; }}
+      el.innerHTML = "<span class='pcval' style='color:" + color + ";'>" + displayDelta + "</span>";
     }}
   }});
   try {{ localStorage.setItem(storageKey, JSON.stringify(updated)); }} catch (e) {{}}
