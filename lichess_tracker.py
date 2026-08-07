@@ -413,7 +413,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     if color_stats:
         w, b, days, hours, minutes, wins, draws, losses, white_pct, black_pct = color_stats
         total = w + b
-        color_html = f"""  <div style="margin-top:2em;font-size:15px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br>weiss <span style="color:#a6a6a6;">{w}</span> <span style="color:#555555;font-size:0.85em;">({white_pct}%)</span> – schwarz <span style="color:#a6a6a6;">{b}</span> <span style="color:#555555;font-size:0.85em;">({black_pct}%)</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
+        color_html = f"""  <div style="margin-top:2em;font-size:17px;color:#555555;text-align:center;line-height:1.6;">{total} Partien<br>weiss <span style="color:#a6a6a6;">{w}</span> <span style="color:#555555;font-size:0.85em;">({white_pct}%)</span> – schwarz <span style="color:#a6a6a6;">{b}</span> <span style="color:#555555;font-size:0.85em;">({black_pct}%)</span><br>gewonnen {wins} – remis {draws} – verloren {losses}<br>Gesamtspielzeit<br>{days} Tage&nbsp;&nbsp;{hours} Std.&nbsp;&nbsp;{minutes} Min.</div>
   <div style="margin-bottom:1.5em;"></div>
 """
 
