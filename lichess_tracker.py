@@ -400,10 +400,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
             f"        <td style=\"color:{diff_color};text-align:right;{rating_style}white-space:nowrap;\">{diff_str}</td>\n"
             f"        <td style=\"color:{rating_color};{rating_style}white-space:nowrap;padding-top:0;padding-bottom:0;overflow:visible;\">"
             f"<span style='display:flex;align-items:baseline;width:100%;'>"
-            f"<span style='flex:1;text-align:center;font-variant-numeric:tabular-nums;'>{arrow_html}"
-            + (f"({p['rating']})" if p.get('provisional')
-               else f"<span style='visibility:hidden;'>(</span>{p['rating']}<span style='visibility:hidden;'>)</span>")
-            + f"</span>"
+            f"<span style='flex:1;text-align:center;font-variant-numeric:tabular-nums;'>{arrow_html}{p['rating']}</span>"
             f"<span class='poschg pcbox' data-name='{player_key}' style='text-align:right;flex-shrink:0;'></span>"
             f"</span></td>\n"
             f"      </tr>\n"
