@@ -684,7 +684,12 @@ def main():
         f.write(html_stabil)
     print(f"  HTML gespeichert: {STABIL_FILE}")
 
-    nobots_players = [p for p in stable_players if p["error"] or not p["name"].lower().startswith("maia")]
+    nobots_players = [
+        p for p in stable_players
+        if p["error"]
+        or p["name"].lower() == "botfather-slay"
+        or (not p["name"].lower().startswith("maia") and p["name"].lower() not in {b.lower() for b in BOT_PLAYERS})
+    ]
     html_nobots = generate_html(nobots_players, color_stats, page_variant="nobots", cache=cache)
     with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
         f.write(html_nobots)
