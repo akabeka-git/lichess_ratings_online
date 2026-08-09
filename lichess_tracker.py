@@ -424,7 +424,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>lichess classic ratings</title>
+<title>lichess classic</title>
 <meta http-equiv="refresh" content="300">
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -450,7 +450,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
     width: 700px;
   }}
   h1 {{
-    font-size: 19px;
+    font-size: 23px;
     font-weight: normal;
     color: #dddddd;
     margin-bottom: 0;
@@ -510,7 +510,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
       overflow-x: hidden;
     }}
     h1 {{
-      font-size: 17px;
+      font-size: 20px;
     }}
     .updated {{
       font-size: 13px;
@@ -540,7 +540,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 <body>
 <div class="wrapper">
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2rem;width:100%;gap:1rem;">
-    <h1><a href="https://github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml" target="_blank" style="color:inherit;text-decoration:none;"><span style="color:#ffffff;margin-right:0.4em;">&#9823;</span>lichess classic ratings</a></h1>
+    <h1><a href="https://github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml" target="_blank" style="color:inherit;text-decoration:none;">lichess classic</a></h1>
     <div style="text-align:right;">
       <div class="updated">{now_str}</div>
       <div style="font-size:12px;margin-top:2px;">
