@@ -286,6 +286,11 @@ def fetch_player_data(username):
     h2h = fetch_h2h_score(username)
     return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
 
+def dim65(hex_color):
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+    return "#{:02x}{:02x}{:02x}".format(int(r*0.65), int(g*0.65), int(b*0.65))
+
 def generate_html(players_data, color_stats=None, page_variant="alle", cache=None):
     if cache is None:
         cache = {}
@@ -316,23 +321,22 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
                 days_ago = (today_berlin_date - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
-        if played_recently:
-            base_color = "#a68900" if p.get("provisional") else "#ffd700"
+        is_bot = p["name"].lower().startswith("maia") or p["name"].lower() == "botfather-slay"
+
+        if is_bot:
+            text_color   = "#47678D" if p.get("provisional") else "#0075FA"
+            rating_color = text_color
         else:
-            base_color = "#a6a6a6" if p.get("provisional") else "#ffffff"
+            if played_recently:
+                base_color = "#a68900" if p.get("provisional") else "#ffd700"
+            else:
+                base_color = "#a6a6a6" if p.get("provisional") else "#ffffff"
 
-        def dim65(hex_color):
-            h = hex_color.lstrip("#")
-            r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
-            return "#{:02x}{:02x}{:02x}".format(int(r*0.65), int(g*0.65), int(b*0.65))
+            text_color   = dim65(base_color) if p.get("provisional") else base_color
+            rating_color = text_color
 
-        text_color   = dim65(base_color) if p.get("provisional") else base_color
-        rating_color = text_color
-
-        is_italic = p["name"].lower().startswith("maia")
-
-        name_style   = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
-        rating_style = "font-weight:bold;" if is_highlight else "font-style:italic;" if is_italic else ""
+        name_style   = "font-weight:bold;" if is_highlight else ""
+        rating_style = "font-weight:bold;" if is_highlight else ""
 
         # Differenz: grün / rot / neutral
         if diff > 0:
