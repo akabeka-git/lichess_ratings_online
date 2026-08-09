@@ -21,6 +21,7 @@ CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
 HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn", "botfather-slay"}
+BOT_PLAYERS = {"botfather-slay"}
 
 def load_players():
     seen = set()
@@ -321,7 +322,7 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
                 days_ago = (today_berlin_date - date.fromisoformat(last_played)).days
                 played_recently = days_ago < 7
 
-        is_bot = p["name"].lower().startswith("maia") or p["name"].lower() == "botfather-slay"
+        is_bot = p["name"].lower().startswith("maia") or p["name"].lower() in {b.lower() for b in BOT_PLAYERS}
 
         if is_bot:
             text_color   = "#47678D" if p.get("provisional") else "#0075FA"
