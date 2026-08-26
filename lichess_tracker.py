@@ -17,6 +17,7 @@ PUBLIC_DIR   = os.path.join(SCRIPT_DIR, "docs")
 OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 STABIL_FILE  = os.path.join(PUBLIC_DIR, "stabil.html")
 NOBOTS_FILE  = os.path.join(PUBLIC_DIR, "nobots.html")
+VERLAUF_FILE = os.path.join(PUBLIC_DIR, "verlauf.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
@@ -184,7 +185,53 @@ def fetch_color_stats(cache):
     black_pct = round(black_wins / total_black * 100) if total_black else 0
     return total_white, total_black, days, hours, minutes, total_wins, total_draws, total_losses, white_pct, black_pct
 
-def fetch_h2h_score(username):
+def fetch_rating_history(username):
+    """Holt die komplette Classical-Rating-Historie eines Spielers von Lichess.
+    Gibt Liste von [YYYY-MM-DD, rating] zurueck, gefiltert ab 1.1.2026."""
+    url = f"https://lichess.org/api/user/{username}/rating-history"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    result = []
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+        for perf_block in data:
+            if perf_block.get("name") != "Classical":
+                continue
+            for point in perf_block.get("points", []):
+                year, month0, day, rating = point[0], point[1], point[2], point[3]
+                if year < 2026:
+                    continue
+                # Lichess-Monate sind 0-indiziert (0 = Januar)
+                date_str = f"{year:04d}-{month0+1:02d}-{day:02d}"
+                result.append([date_str, rating])
+    except Exception as e:
+        print(f"  Rating-History-Fehler bei {username}: {e}", file=sys.stderr)
+    return result
+
+def get_rating_histories(player_names, cache):
+    """Holt Rating-Historien fuer alle uebergebenen Spieler, aber nur einmal pro Tag."""
+    import zoneinfo
+    today_str = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin")).date().isoformat()
+    hist_cache = cache.get("_rating_history", {})
+    last_fetch_date = hist_cache.get("_fetched_on")
+
+    if last_fetch_date == today_str:
+        print("  Rating-Historie: heute schon aktualisiert, verwende Cache.")
+        return {name: hist_cache.get(name.lower(), []) for name in player_names}
+
+    print("  Rating-Historie wird taeglich aktualisiert ...")
+    new_hist = {"_fetched_on": today_str}
+    histories = {}
+    for name in player_names:
+        hist = fetch_rating_history(name)
+        new_hist[name.lower()] = hist
+        histories[name] = hist
+        time.sleep(1)
+
+    cache["_rating_history"] = new_hist
+    return histories
+
+
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
         return None
     total_wins, total_losses, total_draws = 0, 0, 0
@@ -549,6 +596,8 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         <a href="stabil.html" style="color:{'#dddddd' if page_variant=='stabil' else '#555555'};text-decoration:none;">stabil</a>
         <span style="color:#555555;"> · </span>
         <a href="nobots.html" style="color:{'#dddddd' if page_variant=='nobots' else '#555555'};text-decoration:none;">nobots</a>
+        <span style="color:#555555;"> · </span>
+        <a href="verlauf.html" style="color:{'#dddddd' if page_variant=='verlauf' else '#555555'};text-decoration:none;">verlauf</a>
       </div>
     </div>
   </div>
@@ -638,6 +687,169 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
 </html>"""
     return html
 
+def generate_verlauf_html(histories):
+    import zoneinfo
+    months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+    now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
+    now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
+
+    # Farbpalette per HSL-Rotation, damit auch bei vielen Spielern gut unterscheidbare Farben entstehen
+    names = list(histories.keys())
+    datasets_js = []
+    for i, name in enumerate(names):
+        safe_name = name.replace("'", "")
+        hue = int(i * 360 / max(len(names), 1))
+        color = f"hsl({hue}, 70%, 60%)"
+        points = histories[name]
+        data_points = ", ".join(f"{{x:'{d}',y:{r}}}" for d, r in points)
+        datasets_js.append(
+            f"{{label:'{safe_name}',data:[{data_points}],borderColor:'{color}',"
+            f"backgroundColor:'{color}',borderWidth:2,pointRadius:0,tension:0.1}}"
+        )
+    datasets_str = ",\n    ".join(datasets_js)
+
+    html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lichess classic</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{
+    overflow-x: hidden;
+    max-width: 100%;
+    touch-action: pan-y;
+  }}
+  body {{
+    background: #1a1a1a;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0.5rem;
+  }}
+  .wrapper {{
+    display: inline-block;
+    text-align: left;
+    width: 700px;
+    max-width: calc(100vw - 1rem);
+  }}
+  h1 {{
+    font-size: 22px;
+    font-weight: normal;
+    color: #dddddd;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }}
+  .updated {{
+    font-size: 16px;
+    color: #dddddd;
+    white-space: nowrap;
+  }}
+  .chart-container {{
+    position: relative;
+    height: 60vh;
+    min-height: 350px;
+    margin-top: 2rem;
+  }}
+  .hint {{
+    color: #555555;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 1rem;
+  }}
+  @media (min-width: 601px) {{
+    .wrapper {{
+      padding-left: 1em;
+      padding-right: 1em;
+    }}
+  }}
+  @media (max-width: 600px) {{
+    h1 {{
+      font-size: 19px;
+    }}
+    .updated {{
+      font-size: 13px;
+    }}
+  }}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem;width:100%;gap:1rem;">
+    <h1><a href="https://github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml" target="_blank" style="color:inherit;text-decoration:none;">&nbsp;&nbsp;&nbsp;lichess classic</a></h1>
+    <div style="text-align:right;">
+      <div class="updated">{now_str}</div>
+      <div style="font-size:12px;margin-top:2px;">
+        <a href="index.html" style="color:#555555;text-decoration:none;">alle</a>
+        <span style="color:#555555;"> · </span>
+        <a href="stabil.html" style="color:#555555;text-decoration:none;">stabil</a>
+        <span style="color:#555555;"> · </span>
+        <a href="nobots.html" style="color:#555555;text-decoration:none;">nobots</a>
+        <span style="color:#555555;"> · </span>
+        <a href="verlauf.html" style="color:#dddddd;text-decoration:none;">verlauf</a>
+      </div>
+    </div>
+  </div>
+  <div class="chart-container">
+    <canvas id="ratingChart"></canvas>
+  </div>
+  <div class="hint">Legende antippen blendet einzelne Spieler aus &middot; Ziehen zum Zoomen</div>
+</div>
+<script>
+  const ctx = document.getElementById('ratingChart').getContext('2d');
+  new Chart(ctx, {{
+    type: 'line',
+    data: {{
+      datasets: [
+        {datasets_str}
+      ]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
+      scales: {{
+        x: {{
+          type: 'time',
+          time: {{ unit: 'week' }},
+          ticks: {{ color: '#888888' }},
+          grid: {{ color: '#2a2a2a' }}
+        }},
+        y: {{
+          ticks: {{ color: '#888888' }},
+          grid: {{ color: '#2a2a2a' }}
+        }}
+      }},
+      plugins: {{
+        legend: {{
+          labels: {{ color: '#cccccc', boxWidth: 12, font: {{ size: 11 }} }}
+        }},
+        tooltip: {{
+          mode: 'nearest',
+          intersect: false
+        }},
+        zoom: {{
+          zoom: {{
+            wheel: {{ enabled: true }},
+            pinch: {{ enabled: true }},
+            drag: {{ enabled: true, modifierKey: null }},
+            mode: 'x'
+          }},
+          pan: {{ enabled: true, mode: 'x' }}
+        }}
+      }}
+    }}
+  }});
+</script>
+</body>
+</html>"""
+    return html
+
 def main():
     if not is_online():
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Kein Internet — Script wird beendet.")
@@ -694,6 +906,14 @@ def main():
     with open(NOBOTS_FILE, "w", encoding="utf-8") as f:
         f.write(html_nobots)
     print(f"  HTML gespeichert: {NOBOTS_FILE}")
+
+    verlauf_names = [p["name"] for p in nobots_players if not p["error"]]
+    histories = get_rating_histories(verlauf_names, cache)
+    save_cache(cache)
+    html_verlauf = generate_verlauf_html(histories)
+    with open(VERLAUF_FILE, "w", encoding="utf-8") as f:
+        f.write(html_verlauf)
+    print(f"  HTML gespeichert: {VERLAUF_FILE}")
 
 
 if __name__ == "__main__":
