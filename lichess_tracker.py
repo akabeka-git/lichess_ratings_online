@@ -231,7 +231,7 @@ def get_rating_histories(player_names, cache):
     cache["_rating_history"] = new_hist
     return histories
 
-
+def fetch_h2h_score(username):
     if username.lower() in [h.lower() for h in H2H_PLAYERS]:
         return None
     total_wins, total_losses, total_draws = 0, 0, 0
