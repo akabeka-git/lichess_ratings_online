@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lichess classic</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+    touch-action: pan-y;
+  }
+  body {
+    background: #1a1a1a;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0.5rem;
+  }
+  .wrapper {
+    display: inline-block;
+    text-align: left;
+    width: 700px;
+    max-width: calc(100vw - 1rem);
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: normal;
+    color: #dddddd;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .updated {
+    font-size: 16px;
+    color: #dddddd;
+    white-space: nowrap;
+  }
+  .chart-container {
+    position: relative;
+    height: 60vh;
+    min-height: 350px;
+    margin-top: 2rem;
+  }
+  .hint {
+    color: #555555;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  @media (min-width: 601px) {
+    .wrapper {
+      padding-left: 1em;
+      padding-right: 1em;
+    }
+  }
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 19px;
+    }
+    .updated {
+      font-size: 13px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem;width:100%;gap:1rem;">
+    <h1><a href="https://github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml" target="_blank" style="color:inherit;text-decoration:none;">&nbsp;&nbsp;&nbsp;lichess classic</a></h1>
+    <div style="text-align:right;">
+      <div class="updated">26. August 22:16 Uhr</div>
+      <div style="font-size:12px;margin-top:2px;">
+        <a href="index.html" style="color:#555555;text-decoration:none;">alle</a>
+        <span style="color:#555555;"> · </span>
+        <a href="stabil.html" style="color:#555555;text-decoration:none;">stabil</a>
+        <span style="color:#555555;"> · </span>
+        <a href="nobots.html" style="color:#555555;text-decoration:none;">nobots</a>
+        <span style="color:#555555;"> · </span>
+        <a href="verlauf.html" style="color:#dddddd;text-decoration:none;">verlauf</a>
+      </div>
+    </div>
+  </div>
+  <div class="chart-container">
+    <canvas id="ratingChart"></canvas>
+  </div>
+  <div class="hint">Legende antippen blendet einzelne Spieler aus &middot; Ziehen zum Zoomen</div>
+</div>
+<script>
+  const ctx = document.getElementById('ratingChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {label:'MKlochko',data:[],borderColor:'hsl(0, 70%, 60%)',backgroundColor:'hsl(0, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'Vyacheslav-77',data:[],borderColor:'hsl(21, 70%, 60%)',backgroundColor:'hsl(21, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'Draak06',data:[],borderColor:'hsl(42, 70%, 60%)',backgroundColor:'hsl(42, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'botfather-slay',data:[],borderColor:'hsl(63, 70%, 60%)',backgroundColor:'hsl(63, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'RusikTMB68',data:[],borderColor:'hsl(84, 70%, 60%)',backgroundColor:'hsl(84, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'jabid1907',data:[],borderColor:'hsl(105, 70%, 60%)',backgroundColor:'hsl(105, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'MariMango',data:[],borderColor:'hsl(127, 70%, 60%)',backgroundColor:'hsl(127, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'pion-panique',data:[],borderColor:'hsl(148, 70%, 60%)',backgroundColor:'hsl(148, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'AliBobo21022812',data:[],borderColor:'hsl(169, 70%, 60%)',backgroundColor:'hsl(169, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'ShadowZR2024',data:[],borderColor:'hsl(190, 70%, 60%)',backgroundColor:'hsl(190, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'knifemaker73',data:[],borderColor:'hsl(211, 70%, 60%)',backgroundColor:'hsl(211, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'ulya0317',data:[],borderColor:'hsl(232, 70%, 60%)',backgroundColor:'hsl(232, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'HaythamIbrahim',data:[],borderColor:'hsl(254, 70%, 60%)',backgroundColor:'hsl(254, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'eliass005',data:[],borderColor:'hsl(275, 70%, 60%)',backgroundColor:'hsl(275, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'stusharp16',data:[],borderColor:'hsl(296, 70%, 60%)',backgroundColor:'hsl(296, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'Danielostry',data:[],borderColor:'hsl(317, 70%, 60%)',backgroundColor:'hsl(317, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1},
+    {label:'cwr4356',data:[],borderColor:'hsl(338, 70%, 60%)',backgroundColor:'hsl(338, 70%, 60%)',borderWidth:2,pointRadius:0,tension:0.1}
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'week' },
+          ticks: { color: '#888888' },
+          grid: { color: '#2a2a2a' }
+        },
+        y: {
+          ticks: { color: '#888888' },
+          grid: { color: '#2a2a2a' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#cccccc', boxWidth: 12, font: { size: 11 } }
+        },
+        tooltip: {
+          mode: 'nearest',
+          intersect: false
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            drag: { enabled: true, modifierKey: null },
+            mode: 'x'
+          },
+          pan: { enabled: true, mode: 'x' }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>
