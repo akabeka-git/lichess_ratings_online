@@ -1,2 +1,3 @@
 # Lichess-Spielernamen (einer pro Zeile, # = Kommentar)
 MKlochko
+randschlauer
