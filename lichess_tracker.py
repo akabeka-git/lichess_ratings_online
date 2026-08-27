@@ -189,7 +189,17 @@ def fetch_rating_history(username):
     """Holt die komplette Classical-Rating-Historie eines Spielers von Lichess.
     Gibt Liste von [YYYY-MM-DD, rating] zurueck, gefiltert ab 1.1.2026."""
     url = f"https://lichess.org/api/user/{username}/rating-history"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    token = (
+        os.environ.get("LICHESS_TOKEN_TRIC")
+        or os.environ.get("LICHESS_TOKEN_PION")
+        or os.environ.get("LICHESS_TOKEN_BOTFATHER")
+        or os.environ.get("LICHESS_TOKEN_PANIC")
+        or ""
+    )
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, headers=headers)
     result = []
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
