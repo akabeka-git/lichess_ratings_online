@@ -776,6 +776,24 @@ def generate_verlauf_html(histories):
     text-align: center;
     margin-top: 1rem;
   }}
+  .rangebtn {{
+    background: #2a2a2a;
+    color: #cccccc;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.4rem 0.9rem;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }}
+  .rangebtn:hover {{
+    background: #3a3a3a;
+  }}
+  .rangebtn.active {{
+    background: #0075FA;
+    color: #ffffff;
+    border-color: #0075FA;
+  }}
   @media (min-width: 601px) {{
     .wrapper {{
       padding-left: 1em;
@@ -812,11 +830,19 @@ def generate_verlauf_html(histories):
   <div class="chart-container">
     <canvas id="ratingChart"></canvas>
   </div>
+  <div style="text-align:center;margin-top:1rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;">
+    <button class="rangebtn" data-days="7">1 Woche</button>
+    <button class="rangebtn" data-days="30">1 Monat</button>
+    <button class="rangebtn" data-days="90">3 Monate</button>
+    <button class="rangebtn" data-days="180">6 Monate</button>
+    <button class="rangebtn" data-days="365">1 Jahr</button>
+    <button class="rangebtn" data-days="0">Alles</button>
+  </div>
   <div class="hint">Legende antippen blendet einzelne Spieler aus &middot; Ziehen zum Zoomen</div>
 </div>
 <script>
   const ctx = document.getElementById('ratingChart').getContext('2d');
-  new Chart(ctx, {{
+  const ratingChart = new Chart(ctx, {{
     type: 'line',
     data: {{
       datasets: [
@@ -858,6 +884,25 @@ def generate_verlauf_html(histories):
         }}
       }}
     }}
+  }});
+
+  document.querySelectorAll('.rangebtn').forEach(function(btn) {{
+    btn.addEventListener('click', function() {{
+      document.querySelectorAll('.rangebtn').forEach(function(b) {{ b.classList.remove('active'); }});
+      btn.classList.add('active');
+      const days = parseInt(btn.dataset.days, 10);
+      if (days === 0) {{
+        delete ratingChart.options.scales.x.min;
+        delete ratingChart.options.scales.x.max;
+      }} else {{
+        const now = new Date();
+        const from = new Date();
+        from.setDate(now.getDate() - days);
+        ratingChart.options.scales.x.min = from;
+        ratingChart.options.scales.x.max = now;
+      }}
+      ratingChart.update();
+    }});
   }});
 </script>
 </body>
