@@ -727,6 +727,16 @@ def generate_verlauf_html(histories):
             f"borderDash:{dash},hidden:{hidden}}}"
         )
         legend_js.append(f"{{name:'{safe_name}',color:'{color}',hidden:{hidden}}}")
+
+    # Zwei feste Referenzlinien, die immer sichtbar bleiben und nicht in der Legende auftauchen
+    for ref_value in (1600, 1800):
+        ref_points = "{x:'2026-01-01',y:%d}, {x:'2030-01-01',y:%d}" % (ref_value, ref_value)
+        datasets_js.append(
+            f"{{label:'{ref_value}',data:[{ref_points}],borderColor:'#777777',"
+            f"backgroundColor:'#777777',borderWidth:1,pointRadius:0,tension:0,"
+            f"borderDash:[],hidden:false}}"
+        )
+
     datasets_str = ",\n    ".join(datasets_js)
     legend_str = ",\n    ".join(legend_js)
 
@@ -861,7 +871,7 @@ def generate_verlauf_html(histories):
     <button class="rangebtn" data-days="365">1 Jahr</button>
     <button class="rangebtn" data-days="180">6 Monate</button>
     <button class="rangebtn" data-days="90">3 Monate</button>
-    <button class="rangebtn" data-days="30">1 Monat</button>
+    <button class="rangebtn active" data-days="30">1 Monat</button>
     <button class="rangebtn" data-days="7">1 Woche</button>
   </div>
   <div id="customLegend" style="text-align:center;margin-top:1rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.6rem;"></div>
@@ -869,6 +879,9 @@ def generate_verlauf_html(histories):
 </div>
 <script>
   const ctx = document.getElementById('ratingChart').getContext('2d');
+  const initialFrom = new Date();
+  initialFrom.setDate(initialFrom.getDate() - 30);
+  const initialTo = new Date();
   const ratingChart = new Chart(ctx, {{
     type: 'line',
     data: {{
@@ -884,6 +897,8 @@ def generate_verlauf_html(histories):
         x: {{
           type: 'time',
           time: {{ unit: 'month' }},
+          min: initialFrom,
+          max: initialTo,
           ticks: {{
             color: '#888888',
             callback: function(value) {{
