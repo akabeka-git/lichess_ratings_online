@@ -957,8 +957,32 @@ def generate_verlauf_html(histories):
   const legendData = [
     {legend_str}
   ];
+  const visKey = "lichess_verlauf_visibility";
+  let savedVis = {{}};
+  try {{
+    const raw = localStorage.getItem(visKey);
+    savedVis = raw ? JSON.parse(raw) : {{}};
+  }} catch (e) {{}}
+
+  function saveVisibility() {{
+    const state = {{}};
+    legendData.forEach(function(item, idx) {{
+      const meta = ratingChart.getDatasetMeta(idx);
+      const isHidden = meta.hidden === null ? ratingChart.data.datasets[idx].hidden : meta.hidden;
+      state[item.name] = !!isHidden;
+    }});
+    try {{ localStorage.setItem(visKey, JSON.stringify(state)); }} catch (e) {{}}
+  }}
+
   const legendContainer = document.getElementById('customLegend');
   legendData.forEach(function(item, idx) {{
+    // Gespeicherten Zustand uebernehmen, falls vorhanden (unbekannte/neue Spieler behalten Standard)
+    if (Object.prototype.hasOwnProperty.call(savedVis, item.name)) {{
+      const wantHidden = savedVis[item.name];
+      ratingChart.getDatasetMeta(idx).hidden = wantHidden;
+      item.hidden = wantHidden;
+    }}
+
     const el = document.createElement('div');
     el.className = 'legenditem' + (item.hidden ? ' dimmed' : '');
     el.innerHTML = "<span class='legendswatch' style='background:" + item.color + ";'></span>" + item.name;
@@ -968,9 +992,11 @@ def generate_verlauf_html(histories):
       meta.hidden = !currentlyHidden;
       el.classList.toggle('dimmed', meta.hidden);
       ratingChart.update();
+      saveVisibility();
     }});
     legendContainer.appendChild(el);
   }});
+  ratingChart.update();
 </script>
 </body>
 </html>"""
