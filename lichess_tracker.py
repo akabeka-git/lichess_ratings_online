@@ -709,18 +709,26 @@ def generate_verlauf_html(histories):
 
     # Farbpalette per HSL-Rotation, damit auch bei vielen Spielern gut unterscheidbare Farben entstehen
     names = list(histories.keys())
+    highlight_lower = {h.lower() for h in HIGHLIGHT_PLAYERS}
     datasets_js = []
+    legend_js = []
     for i, name in enumerate(names):
         safe_name = name.replace("'", "")
+        is_hl = name.lower() in highlight_lower
         hue = int(i * 360 / max(len(names), 1))
         color = f"hsl({hue}, 70%, 60%)"
         points = histories[name]
         data_points = ", ".join(f"{{x:'{d}',y:{r}}}" for d, r in points)
+        dash = "[]" if is_hl else "[2,3]"
+        hidden = "false" if is_hl else "true"
         datasets_js.append(
             f"{{label:'{safe_name}',data:[{data_points}],borderColor:'{color}',"
-            f"backgroundColor:'{color}',borderWidth:2,pointRadius:0,tension:0.1}}"
+            f"backgroundColor:'{color}',borderWidth:2,pointRadius:0,tension:0.1,"
+            f"borderDash:{dash},hidden:{hidden}}}"
         )
+        legend_js.append(f"{{name:'{safe_name}',color:'{color}',hidden:{hidden}}}")
     datasets_str = ",\n    ".join(datasets_js)
+    legend_str = ",\n    ".join(legend_js)
 
     html = f"""<!DOCTYPE html>
 <html lang="de">
@@ -794,6 +802,24 @@ def generate_verlauf_html(histories):
     color: #ffffff;
     border-color: #0075FA;
   }}
+  .legenditem {{
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
+    cursor: pointer;
+    font-size: 12px;
+    color: #cccccc;
+    user-select: none;
+  }}
+  .legenditem.dimmed {{
+    color: #555555;
+  }}
+  .legendswatch {{
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }}
   @media (min-width: 601px) {{
     .wrapper {{
       padding-left: 1em;
@@ -831,13 +857,14 @@ def generate_verlauf_html(histories):
     <canvas id="ratingChart"></canvas>
   </div>
   <div style="text-align:center;margin-top:1rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;">
-    <button class="rangebtn" data-days="7">1 Woche</button>
-    <button class="rangebtn" data-days="30">1 Monat</button>
-    <button class="rangebtn" data-days="90">3 Monate</button>
-    <button class="rangebtn" data-days="180">6 Monate</button>
-    <button class="rangebtn" data-days="365">1 Jahr</button>
     <button class="rangebtn" data-days="0">Alles</button>
+    <button class="rangebtn" data-days="365">1 Jahr</button>
+    <button class="rangebtn" data-days="180">6 Monate</button>
+    <button class="rangebtn" data-days="90">3 Monate</button>
+    <button class="rangebtn" data-days="30">1 Monat</button>
+    <button class="rangebtn" data-days="7">1 Woche</button>
   </div>
+  <div id="customLegend" style="text-align:center;margin-top:1rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.6rem;"></div>
   <div class="hint">Legende antippen blendet einzelne Spieler aus &middot; Ziehen zum Zoomen</div>
 </div>
 <script>
@@ -856,8 +883,15 @@ def generate_verlauf_html(histories):
       scales: {{
         x: {{
           type: 'time',
-          time: {{ unit: 'week' }},
-          ticks: {{ color: '#888888' }},
+          time: {{ unit: 'month' }},
+          ticks: {{
+            color: '#888888',
+            callback: function(value) {{
+              const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+              const d = new Date(value);
+              return monthNames[d.getMonth()];
+            }}
+          }},
           grid: {{ color: '#2a2a2a' }}
         }},
         y: {{
@@ -867,7 +901,7 @@ def generate_verlauf_html(histories):
       }},
       plugins: {{
         legend: {{
-          labels: {{ color: '#cccccc', boxWidth: 12, font: {{ size: 11 }} }}
+          display: false
         }},
         tooltip: {{
           mode: 'nearest',
@@ -903,6 +937,24 @@ def generate_verlauf_html(histories):
       }}
       ratingChart.update();
     }});
+  }});
+
+  const legendData = [
+    {legend_str}
+  ];
+  const legendContainer = document.getElementById('customLegend');
+  legendData.forEach(function(item, idx) {{
+    const el = document.createElement('div');
+    el.className = 'legenditem' + (item.hidden ? ' dimmed' : '');
+    el.innerHTML = "<span class='legendswatch' style='background:" + item.color + ";'></span>" + item.name;
+    el.addEventListener('click', function() {{
+      const meta = ratingChart.getDatasetMeta(idx);
+      const currentlyHidden = meta.hidden === null ? ratingChart.data.datasets[idx].hidden : meta.hidden;
+      meta.hidden = !currentlyHidden;
+      el.classList.toggle('dimmed', meta.hidden);
+      ratingChart.update();
+    }});
+    legendContainer.appendChild(el);
   }});
 </script>
 </body>
