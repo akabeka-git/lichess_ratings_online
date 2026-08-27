@@ -193,10 +193,13 @@ def fetch_rating_history(username):
     result = []
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode())
+            raw = resp.read().decode()
+            data = json.loads(raw)
+        classical_found = False
         for perf_block in data:
             if perf_block.get("name") != "Classical":
                 continue
+            classical_found = True
             for point in perf_block.get("points", []):
                 year, month0, day, rating = point[0], point[1], point[2], point[3]
                 if year < 2026:
@@ -204,6 +207,7 @@ def fetch_rating_history(username):
                 # Lichess-Monate sind 0-indiziert (0 = Januar)
                 date_str = f"{year:04d}-{month0+1:02d}-{day:02d}"
                 result.append([date_str, rating])
+        print(f"  Debug {username}: {len(raw)} Bytes, Classical gefunden={classical_found}, {len(result)} Punkte ab 2026", file=sys.stderr)
     except Exception as e:
         print(f"  Rating-History-Fehler bei {username}: {e}", file=sys.stderr)
     return result
