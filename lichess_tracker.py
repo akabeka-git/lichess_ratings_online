@@ -941,8 +941,8 @@ def generate_verlauf_html(histories):
       btn.classList.add('active');
       const days = parseInt(btn.dataset.days, 10);
       if (days === 0) {{
-        delete ratingChart.options.scales.x.min;
-        delete ratingChart.options.scales.x.max;
+        ratingChart.options.scales.x.min = new Date('2026-01-01');
+        ratingChart.options.scales.x.max = new Date();
       }} else {{
         const now = new Date();
         const from = new Date();
