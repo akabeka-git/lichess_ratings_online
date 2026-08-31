@@ -439,7 +439,12 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         else:
             h2h_str = ""
 
-        display_name = "schachpinguin" if p['name'].lower() == "schachpinguin3000" else p['name']
+        if p['name'].lower() == "schachpinguin3000":
+            display_name = "schachpinguin"
+        elif p['name'].lower() == "botfather-slay":
+            display_name = "botfather-s"
+        else:
+            display_name = p['name']
         if is_highlight:
             display_name = f"&gt;&gt; {display_name}"
 
@@ -723,6 +728,8 @@ def generate_verlauf_html(histories):
     legend_js = []
     for i, name in enumerate(names):
         safe_name = name.replace("'", "")
+        if safe_name.lower() == "botfather-slay":
+            safe_name = "botfather-s"
         is_hl = name.lower() in highlight_lower
         hue = int(i * 360 / max(len(names), 1))
         color = f"hsl({hue}, 70%, 60%)"
