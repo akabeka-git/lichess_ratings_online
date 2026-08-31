@@ -230,7 +230,16 @@ def get_rating_histories(player_names, cache):
     last_fetch_date = hist_cache.get("_fetched_on")
 
     if last_fetch_date == today_str:
-        print("  Rating-Historie: heute schon aktualisiert, verwende Cache.")
+        missing = [name for name in player_names if name.lower() not in hist_cache]
+        if missing:
+            print(f"  Rating-Historie: {len(missing)} neue Spieler werden nachgeladen ...")
+            for name in missing:
+                hist = fetch_rating_history(name)
+                hist_cache[name.lower()] = hist
+                time.sleep(1)
+            cache["_rating_history"] = hist_cache
+        else:
+            print("  Rating-Historie: heute schon aktualisiert, verwende Cache.")
         return {name: hist_cache.get(name.lower(), []) for name in player_names}
 
     print("  Rating-Historie wird taeglich aktualisiert ...")
