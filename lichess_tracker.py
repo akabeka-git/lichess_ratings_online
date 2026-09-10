@@ -626,6 +626,8 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         <a href="nobots.html" style="color:{'#dddddd' if page_variant=='nobots' else '#555555'};text-decoration:none;">nobots</a>
         <span style="color:#555555;"> · </span>
         <a href="verlauf.html" style="color:{'#dddddd' if page_variant=='verlauf' else '#555555'};text-decoration:none;">verlauf</a>
+        <span style="color:#555555;"> · </span>
+        <a href="play.html" style="color:{'#dddddd' if page_variant=='play' else '#555555'};text-decoration:none;">play</a>
       </div>
     </div>
   </div>
@@ -876,6 +878,8 @@ def generate_verlauf_html(histories):
         <a href="nobots.html" style="color:#555555;text-decoration:none;">nobots</a>
         <span style="color:#555555;"> · </span>
         <a href="verlauf.html" style="color:#dddddd;text-decoration:none;">verlauf</a>
+        <span style="color:#555555;"> · </span>
+        <a href="play.html" style="color:#555555;text-decoration:none;">play</a>
       </div>
     </div>
   </div>
@@ -1018,6 +1022,139 @@ def generate_verlauf_html(histories):
 </html>"""
     return html
 
+def compute_play_status(rd, days_since_last_game):
+    """Berechnet den Status-Indikator gemaess aufsteigender Prioritaet:
+    gruen < gelb < orange < rot -- eine hoehere Stufe ueberschreibt immer eine niedrigere."""
+    if rd is not None and rd > 109:
+        return "red"
+    if rd is not None and rd > 99:
+        return "orange"
+    if days_since_last_game is None or days_since_last_game > 10:
+        return "yellow"
+    return "green"
+
+def generate_play_html(status_data):
+    import zoneinfo
+    months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+    now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
+    now_str = f"{now.day}. {months[now.month-1]} {now.hour}:{now.minute:02d} Uhr"
+
+    icons = {
+        "green":  "<svg width='36' height='36' viewBox='0 0 24 24'><path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z' fill='#3dbd6a'/></svg>",
+        "yellow": "<svg width='30' height='30' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='#e8d23d'/></svg>",
+        "orange": "<svg width='30' height='30' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='#e8a33d'/></svg>",
+        "red":    "<svg width='30' height='30' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='#cc4444'/></svg>",
+    }
+
+    rows_html = ""
+    for name, status in status_data:
+        icon = icons.get(status, "")
+        rows_html += f"""  <div class="play-row">
+    <span class="play-name">{name}</span>
+    <span class="play-icon">{icon}</span>
+  </div>
+"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lichess classic</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{
+    overflow-x: hidden;
+    max-width: 100%;
+    touch-action: pan-y;
+  }}
+  body {{
+    background: #1a1a1a;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0.5rem;
+  }}
+  .wrapper {{
+    display: inline-block;
+    text-align: left;
+    width: 700px;
+    max-width: calc(100vw - 1rem);
+  }}
+  h1 {{
+    font-size: 22px;
+    font-weight: normal;
+    color: #dddddd;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }}
+  .updated {{
+    font-size: 16px;
+    color: #dddddd;
+    white-space: nowrap;
+  }}
+  .play-row {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 2rem 0;
+  }}
+  .play-name {{
+    color: #dddddd;
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+  }}
+  .play-icon {{
+    display: flex;
+    align-items: center;
+  }}
+  @media (min-width: 601px) {{
+    .wrapper {{
+      padding-left: 1em;
+      padding-right: 1em;
+    }}
+  }}
+  @media (max-width: 600px) {{
+    h1 {{
+      font-size: 19px;
+    }}
+    .updated {{
+      font-size: 13px;
+    }}
+    .play-name {{
+      font-size: 28px;
+    }}
+  }}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem;width:100%;gap:1rem;">
+    <h1><a href="https://github.com/akabeka-git/lichess_ratings_online/actions/workflows/update.yml" target="_blank" style="color:inherit;text-decoration:none;">&nbsp;&nbsp;&nbsp;lichess classic</a></h1>
+    <div style="text-align:right;">
+      <div class="updated">{now_str}</div>
+      <div style="font-size:12px;margin-top:2px;">
+        <a href="index.html" style="color:#555555;text-decoration:none;">alle</a>
+        <span style="color:#555555;"> · </span>
+        <a href="stabil.html" style="color:#555555;text-decoration:none;">stabil</a>
+        <span style="color:#555555;"> · </span>
+        <a href="nobots.html" style="color:#555555;text-decoration:none;">nobots</a>
+        <span style="color:#555555;"> · </span>
+        <a href="verlauf.html" style="color:#555555;text-decoration:none;">verlauf</a>
+        <span style="color:#555555;"> · </span>
+        <a href="play.html" style="color:#dddddd;text-decoration:none;">play</a>
+      </div>
+    </div>
+  </div>
+{rows_html}</div>
+</body>
+</html>"""
+    return html
+
 def main():
     if not is_online():
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Kein Internet — Script wird beendet.")
@@ -1082,6 +1219,29 @@ def main():
     with open(VERLAUF_FILE, "w", encoding="utf-8") as f:
         f.write(html_verlauf)
     print(f"  HTML gespeichert: {VERLAUF_FILE}")
+
+    import zoneinfo as _zi
+    today_berlin_date = datetime.now(_zi.ZoneInfo("Europe/Berlin")).date()
+    players_lookup = {p["name"].lower(): p for p in players_data if not p["error"]}
+    play_order = ["botfather-slay", "pion-panique"]
+    status_data = []
+    for pname in play_order:
+        p = players_lookup.get(pname)
+        if not p:
+            continue
+        rd = p.get("rd")
+        entry = cache.get(pname)
+        last_played = entry["last_played"] if isinstance(entry, dict) else None
+        days_since = None
+        if last_played:
+            days_since = (today_berlin_date - date.fromisoformat(last_played)).days
+        status = compute_play_status(rd, days_since)
+        status_data.append((p["name"], status))
+
+    html_play = generate_play_html(status_data)
+    with open(PLAY_FILE, "w", encoding="utf-8") as f:
+        f.write(html_play)
+    print(f"  HTML gespeichert: {PLAY_FILE}")
 
 
 if __name__ == "__main__":
