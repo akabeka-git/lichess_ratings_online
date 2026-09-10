@@ -18,6 +18,7 @@ OUTPUT_FILE  = os.path.join(PUBLIC_DIR, "index.html")
 STABIL_FILE  = os.path.join(PUBLIC_DIR, "stabil.html")
 NOBOTS_FILE  = os.path.join(PUBLIC_DIR, "nobots.html")
 VERLAUF_FILE = os.path.join(PUBLIC_DIR, "verlauf.html")
+PLAY_FILE    = os.path.join(PUBLIC_DIR, "play.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
