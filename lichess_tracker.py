@@ -1048,10 +1048,13 @@ def generate_play_html(status_data):
     }
 
     rows_html = ""
+    emoji_map = {"botfather-slay": "&#129302;", "pion-panique": "&#128036;"}
     for name, status in status_data:
         icon = icons.get(status, "")
+        emoji = emoji_map.get(name.lower(), "")
+        emoji_prefix = f"{emoji}&nbsp;" if emoji else ""
         rows_html += f"""  <div class="play-row">
-    <span class="play-name">{name}</span>
+    <a href='https://lichess.org/@/{name}/all' target='_blank' class="play-name" style="text-decoration:none;color:inherit;">{emoji_prefix}{name}</a>
     <span class="play-icon">{icon}</span>
   </div>
 """
@@ -1075,6 +1078,7 @@ def generate_play_html(status_data):
     min-height: 100vh;
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 1.5rem 0.5rem;
   }}
   .wrapper {{
@@ -1101,7 +1105,7 @@ def generate_play_html(status_data):
     justify-content: center;
     gap: 1rem;
     width: 100%;
-    padding: 2rem 0;
+    padding: 0.3rem 0;
   }}
   .play-name {{
     color: #dddddd;
