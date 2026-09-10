@@ -1054,7 +1054,7 @@ def generate_play_html(status_data):
         emoji = emoji_map.get(name.lower(), "")
         emoji_prefix = f"{emoji}&nbsp;" if emoji else ""
         rows_html += f"""  <div class="play-row">
-    <a href='https://lichess.org/@/{name}/all' target='_blank' class="play-name" style="text-decoration:none;color:inherit;">{emoji_prefix}{name}</a>
+    <a href='https://lichess.org/@/{name}/all' target='_blank' class="play-name" style="text-decoration:none;color:#dddddd;">{emoji_prefix}{name}</a>
     <span class="play-icon">{icon}</span>
   </div>
 """
@@ -1078,7 +1078,7 @@ def generate_play_html(status_data):
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     padding: 1.5rem 0.5rem;
   }}
   .wrapper {{
@@ -1155,6 +1155,8 @@ def generate_play_html(status_data):
       </div>
     </div>
   </div>
+</div>
+<div style="position:fixed;top:33.3vh;left:50%;transform:translate(-50%,0);width:100%;max-width:700px;padding:0 0.5rem;">
 {rows_html}</div>
 </body>
 </html>"""
