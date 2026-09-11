@@ -1034,7 +1034,7 @@ def compute_play_status(rd, days_since_last_game):
         return "yellow"
     return "green"
 
-def generate_play_html(status_data):
+def generate_play_html(status_data, color_stats=None):
     import zoneinfo
     months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
     now = datetime.now(zoneinfo.ZoneInfo("Europe/Berlin"))
@@ -1057,6 +1057,19 @@ def generate_play_html(status_data):
     <a href='https://lichess.org/@/{name}/all' target='_blank' class="play-name" style="text-decoration:none;color:#dddddd;">{emoji_prefix}{name}</a>
     <span class="play-icon">{icon}</span>
   </div>
+"""
+
+    suggestion_word = ""
+    if color_stats:
+        w = color_stats[0]
+        b = color_stats[1]
+        diff = b - w
+        if diff >= 3:
+            suggestion_word = "weiss"
+        elif -diff >= 3:
+            suggestion_word = "schwarz"
+    if suggestion_word:
+        rows_html += f"""  <div class="play-suggestion">{suggestion_word}</div>
 """
 
     html = f"""<!DOCTYPE html>
@@ -1117,6 +1130,14 @@ def generate_play_html(status_data):
     display: flex;
     align-items: center;
   }}
+  .play-suggestion {{
+    color: #ffffff;
+    font-size: 22px;
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 0;
+  }}
   @media (min-width: 601px) {{
     .wrapper {{
       padding-left: 1em;
@@ -1132,6 +1153,9 @@ def generate_play_html(status_data):
     }}
     .play-name {{
       font-size: 28px;
+    }}
+    .play-suggestion {{
+      font-size: 19px;
     }}
   }}
 </style>
@@ -1245,7 +1269,7 @@ def main():
         status = compute_play_status(rd, days_since)
         status_data.append((p["name"], status))
 
-    html_play = generate_play_html(status_data)
+    html_play = generate_play_html(status_data, color_stats)
     with open(PLAY_FILE, "w", encoding="utf-8") as f:
         f.write(html_play)
     print(f"  HTML gespeichert: {PLAY_FILE}")
