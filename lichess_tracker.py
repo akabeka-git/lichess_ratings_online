@@ -1047,9 +1047,19 @@ def generate_play_html(status_data, color_stats=None):
         "red":    "<svg width='30' height='30' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='#cc4444'/></svg>",
     }
 
+    suggestion_word = ""
+    if color_stats:
+        w = color_stats[0]
+        b = color_stats[1]
+        diff = b - w
+        if diff >= 3:
+            suggestion_word = "spielt weiss"
+        elif -diff >= 3:
+            suggestion_word = "spielt schwarz"
+
     rows_html = ""
     emoji_map = {"botfather-slay": "&#129302;", "pion-panique": "&#128036;"}
-    for name, status in status_data:
+    for i, (name, status) in enumerate(status_data):
         icon = icons.get(status, "")
         emoji = emoji_map.get(name.lower(), "")
         emoji_prefix = f"{emoji}&nbsp;" if emoji else ""
@@ -1058,18 +1068,8 @@ def generate_play_html(status_data, color_stats=None):
     <span class="play-icon">{icon}</span>
   </div>
 """
-
-    suggestion_word = ""
-    if color_stats:
-        w = color_stats[0]
-        b = color_stats[1]
-        diff = b - w
-        if diff >= 3:
-            suggestion_word = "weiss"
-        elif -diff >= 3:
-            suggestion_word = "schwarz"
-    if suggestion_word:
-        rows_html += f"""  <div class="play-suggestion">{suggestion_word}</div>
+        if name.lower() == "botfather-slay" and suggestion_word:
+            rows_html += f"""  <div class="play-suggestion">{suggestion_word}</div>
 """
 
     html = f"""<!DOCTYPE html>
