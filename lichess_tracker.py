@@ -352,11 +352,13 @@ def fetch_player_data(username):
     try:
         games_today = fetch_todays_classic_games(username)
         diff = calculate_daily_diff(games_today, username)
+        played_today = len(games_today) > 0
     except Exception as e:
         print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
         diff = 0
+        played_today = False
     h2h = fetch_h2h_score(username)
-    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "h2h": h2h, "error": False}
+    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "played_today": played_today, "h2h": h2h, "error": False}
 
 def dim65(hex_color):
     h = hex_color.lstrip("#")
@@ -1208,7 +1210,8 @@ def main():
     for p in players_data:
         if not p["error"]:
             key = p["name"].lower()
-            if p["diff"] != 0:
+            played_today = p.get("played_today", p["diff"] != 0)
+            if played_today:
                 cache[key] = {"diff": p["diff"], "last_played": today_str}
             elif key in cache:
                 p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
