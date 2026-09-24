@@ -398,7 +398,8 @@ def generate_html(players_data, color_stats=None, page_variant="alle", cache=Non
         is_bot = p["name"].lower().startswith("maia") or p["name"].lower() in {b.lower() for b in BOT_PLAYERS}
 
         if is_bot:
-            text_color   = "#47678D" if p.get("provisional") else "#0075FA"
+            base_color = "#47678D" if p.get("provisional") else "#0075FA"
+            text_color   = base_color
             rating_color = text_color
         else:
             if played_recently:
