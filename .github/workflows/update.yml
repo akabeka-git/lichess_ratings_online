@@ -5,6 +5,10 @@ on:
     - cron: '5 * * * *'
   workflow_dispatch:
 
+concurrency:
+  group: lichess-update
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
