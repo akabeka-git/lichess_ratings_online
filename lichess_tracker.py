@@ -207,6 +207,7 @@ def fetch_rating_history(username):
             raw = resp.read().decode()
             data = json.loads(raw)
         classical_found = False
+        print(f"  DEBUG-STRUKTUR {username}: Typ={type(data).__name__}, Namen={[pb.get('name') for pb in data] if isinstance(data, list) else 'n/a'}", file=sys.stderr)
         for perf_block in data:
             if perf_block.get("name") != "Classical":
                 continue
