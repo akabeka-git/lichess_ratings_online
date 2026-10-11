@@ -136,6 +136,10 @@ def fetch_color_stats(cache):
                     new_games_found += 1
                     if created > max_created:
                         max_created = created
+                    if game.get("perf") not in ("rapid", "classical"):
+                        continue
+                    if not game.get("rated", False):
+                        continue
                     players = game.get("players", {})
                     white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
                     is_white = white_id == username.lower()
@@ -272,6 +276,8 @@ def fetch_h2h_score(username):
                     if not line:
                         continue
                     game = json.loads(line.decode())
+                    if not game.get("rated", False):
+                        continue
                     winner = game.get("winner")
                     players = game.get("players", {})
                     white_id = players.get("white", {}).get("user", {}).get("id", "").lower()
