@@ -22,7 +22,7 @@ PLAY_FILE    = os.path.join(PUBLIC_DIR, "play.html")
 CACHE_FILE   = os.path.join(SCRIPT_DIR, "werte.json")
 
 # Diese Spieler: 100% weiss + 100% gelb fuer Aenderungen
-HIGHLIGHT_PLAYERS = {"tric-k_17", "pion-panique", "panic-pawn", "botfather-slay"}
+HIGHLIGHT_PLAYERS = {"gut-genug", "pion-panique", "panic-pawn", "botfather-slay"}
 BOT_PLAYERS = {"botfather-slay"}
 
 def load_players():
@@ -34,7 +34,7 @@ def load_players():
             players.append(account)
 
     token_map = {
-        "tric-k_17":      os.environ.get("LICHESS_TOKEN_TRIC", ""),
+        "gut-genug":      os.environ.get("LICHESS_TOKEN_TRIC", ""),
         "pion-panique":   os.environ.get("LICHESS_TOKEN_PION", ""),
         "botfather-slay": os.environ.get("LICHESS_TOKEN_BOTFATHER", ""),
         "panic-pawn":     os.environ.get("LICHESS_TOKEN_PANIC", ""),
@@ -95,9 +95,9 @@ def is_online():
     except:
         return False
 
-H2H_PLAYERS = ["pion-panique", "botfather-slay", "tric-k_17", "panic-pawn"]
+H2H_PLAYERS = ["pion-panique", "botfather-slay", "gut-genug", "panic-pawn"]
 
-COLOR_STATS_PLAYERS = ["pion-panique", "tric-k_17", "botfather-slay"]
+COLOR_STATS_PLAYERS = ["pion-panique", "gut-genug", "botfather-slay"]
 SINCE_2026 = 1767225600000  # 2026-01-01 00:00:00 UTC in ms
 
 def fetch_color_stats(cache):
