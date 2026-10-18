@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -40,4 +42,4 @@ jobs:
           git add docs/index.html docs/stabil.html docs/nobots.html docs/verlauf.html docs/play.html werte.json
           git diff --staged --quiet \
             && echo "Keine Änderungen." \
-            || (git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git pull --rebase origin main && git push)
+            || (git commit -m "chore: update ratings $(date -u '+%Y-%m-%d %H:%M UTC')" && git pull --rebase -X theirs origin main && git push)
