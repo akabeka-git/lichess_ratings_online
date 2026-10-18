@@ -89,11 +89,20 @@ def save_cache(cache):
         json.dump(cache, f)
 
 def is_online():
-    try:
-        urllib.request.urlopen("https://lichess.org", timeout=5)
-        return True
-    except:
-        return False
+    """Prueft, ob Lichess erreichbar ist. Jede HTTP-Antwort (auch 403/429) zaehlt als online."""
+    last_error = None
+    for attempt in range(3):
+        try:
+            urllib.request.urlopen("https://lichess.org/api/user/lichess", timeout=15)
+            return True
+        except urllib.error.HTTPError as e:
+            print(f"  is_online: HTTP {e.code} von lichess.org (Server erreichbar).", file=sys.stderr)
+            return True
+        except Exception as e:
+            last_error = e
+            time.sleep(3)
+    print(f"  is_online: lichess.org nicht erreichbar: {last_error!r}", file=sys.stderr)
+    return False
 
 H2H_PLAYERS = ["pion-panique", "botfather-slay", "gut_genug", "panic-pawn"]
 
