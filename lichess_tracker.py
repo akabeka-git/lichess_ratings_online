@@ -317,28 +317,38 @@ def fetch_user_info(username):
     with urllib.request.urlopen(req, timeout=10) as resp:
         return json.loads(resp.read().decode())
 
-def fetch_todays_classic_games(username):
+def fetch_classic_games(username):
+    """Holt die letzten Classical-Partien (gewertet und ungewertet).
+    Gibt (Partien von heute, Datum der neuesten Classical-Partie als ISO-String oder None) zurueck."""
     import zoneinfo
     berlin = zoneinfo.ZoneInfo("Europe/Berlin")
     today_berlin = datetime.now(berlin).date()
 
     url = (
         f"https://lichess.org/api/games/user/{username}"
-        f"?max=100&moves=false&evals=false&opening=false"
+        f"?max=100&perfType=classical&moves=false&evals=false&opening=false"
     )
     req = urllib.request.Request(url, headers={"Accept": "application/x-ndjson"})
-    games = []
+    games_today = []
+    latest_date = None
     with urllib.request.urlopen(req, timeout=20) as resp:
         for line in resp:
             line = line.strip()
-            if line:
-                game = json.loads(line.decode())
-                ts = game.get("lastMoveAt", game.get("createdAt", 0)) / 1000
-                is_today = datetime.fromtimestamp(ts, tz=berlin).date() == today_berlin
-                is_classical = game.get("perf") == "classical"
-                if is_today and is_classical:
-                    games.append(game)
-    return games
+            if not line:
+                continue
+            game = json.loads(line.decode())
+            if game.get("perf") != "classical":
+                continue
+            ts = game.get("lastMoveAt", game.get("createdAt", 0)) / 1000
+            game_date = datetime.fromtimestamp(ts, tz=berlin).date()
+            if latest_date is None or game_date > latest_date:
+                latest_date = game_date
+            if game_date == today_berlin:
+                games_today.append(game)
+    return games_today, (latest_date.isoformat() if latest_date else None)
+
+def fetch_todays_classic_games(username):
+    return fetch_classic_games(username)[0]
 
 def calculate_daily_diff(games, username):
     username_lower = username.lower()
@@ -365,15 +375,16 @@ def fetch_player_data(username):
         print(f"  Fehler bei {username}: {e}", file=sys.stderr)
         return {"name": username, "rating": 0, "diff": 0, "error": True}
     try:
-        games_today = fetch_todays_classic_games(username)
+        games_today, last_game_date = fetch_classic_games(username)
         diff = calculate_daily_diff(games_today, username)
         played_today = len(games_today) > 0
     except Exception as e:
         print(f"  Tagesspiele nicht abrufbar fuer {username}: {e}", file=sys.stderr)
         diff = 0
         played_today = False
+        last_game_date = None
     h2h = fetch_h2h_score(username)
-    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "played_today": played_today, "h2h": h2h, "error": False}
+    return {"name": username, "rating": rating, "provisional": provisional, "rd": rd, "prog": prog, "diff": diff, "played_today": played_today, "last_game_date": last_game_date, "h2h": h2h, "error": False}
 
 def dim65(hex_color):
     h = hex_color.lstrip("#")
@@ -1227,10 +1238,16 @@ def main():
         if not p["error"]:
             key = p["name"].lower()
             played_today = p.get("played_today", p["diff"] != 0)
+            last_game_date = p.get("last_game_date")
             if played_today:
                 cache[key] = {"diff": p["diff"], "last_played": today_str}
             elif key in cache:
                 p["diff"] = cache[key]["diff"] if isinstance(cache[key], dict) else cache[key]
+                if last_game_date and isinstance(cache[key], dict):
+                    if (cache[key].get("last_played") or "") < last_game_date:
+                        cache[key]["last_played"] = last_game_date
+            elif last_game_date:
+                cache[key] = {"diff": p["diff"], "last_played": last_game_date}
 
     players_data.sort(key=lambda p: p["rating"], reverse=True)
 
